@@ -1,0 +1,8 @@
+table {
+    width: 100%;
+}
+table thead tr th.wrap_content, table tbody tr td.wrap_content {
+    word-wrap: break-word !important;
+    white-space: nowrap !important;
+    width: 1% !important;
+}
