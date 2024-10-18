@@ -56,7 +56,7 @@
                           </div>
                         </div>
                         <div class="d-grid py-4 px-7 pt-8">
-                          <a href="./main/authentication-login.html" class="btn btn-outline-primary">Log Out</a>
+                          <a href="logout.php" class="btn btn-outline-primary">Log Out</a>
                         </div>
                       </div>
                     </div>
@@ -183,7 +183,7 @@
                               </div>
                             </div>
                           </div>
-                          <a href="./main/authentication-login.html" class="btn btn-outline-primary">Log Out</a>
+                          <a href="logout.php" class="btn btn-outline-primary">Log Out</a>
                         </div>
                       </div>
                     </div>

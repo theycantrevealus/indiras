@@ -1,0 +1,11 @@
+{
+  "status": "success",
+  "message": "Berhasil masuk",
+  "data": {
+    "id": 1,
+    "kode": "S1234",
+    "jabatan": "Sales",
+    "access_token": "MhlrWbLpbBoeXq8q1bmhVjmb2EvwoKZXCRlmcYCz4g5jgxpD6iuJvjWLPWTBCCfa",
+    "refresh_token": "e39SZm1191bpc6lPhPcRjQSva10XsuxxKDpW5XFrv33s7tFtKRJ8CtU6w9q2mFQg"
+  }
+}

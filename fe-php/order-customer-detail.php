@@ -4,7 +4,6 @@
 <?php 
 
 $customerId = isset($_GET['customer_id']) ? $_GET['customer_id'] : null; 
-$salesId = isset($_GET['sales_id']) ? $_GET['sales_id'] : null;
 
 ?>
 
@@ -24,10 +23,9 @@ $salesId = isset($_GET['sales_id']) ? $_GET['sales_id'] : null;
 </head>
 
 <body class="link-sidebar">
-  <!-- Preloader -->
-  <div class="preloader">
-    <img src="./assets/images/logos/favicon.png" alt="loader" class="lds-ripple img-fluid" />
-  </div>
+  <!-- Preloader --> 
+  <?php include './preloader.php' ?>
+
   <div id="main-wrapper">
     <!-- Sidebar Start -->
     <?php include "./sidebar.php" ?>
@@ -69,7 +67,7 @@ $salesId = isset($_GET['sales_id']) ? $_GET['sales_id'] : null;
                     <div class="col-md-6 mb-3 row">
                       <label for="customer-name" class="col-md-4 col-form-label">Sales</label>
                       <div class="col-md-8">
-                        <input disabled class="form-control" type="text" id="sales-id" value="<?= $salesId ?>">
+                        <input disabled class="form-control" type="text" id="sales-id" value="">
                       </div>
                     </div>
                   </div>
@@ -241,7 +239,11 @@ $salesId = isset($_GET['sales_id']) ? $_GET['sales_id'] : null;
 <script src="./assets/libs/select2/dist/js/select2.full.min.js"></script>
 <script src="./assets/libs/select2/dist/js/select2.min.js"></script>
 
+<?php include './auth_check.php' ?>
+
 <script>
+
+  $("#sales-id").val(salesData.kode);
 
   const apiUrl = "./sample_data/order-item-list.json";
   const orderItem = localStorage.getItem(`order_item_cust_` + `<?= $customerId ?>`);
@@ -487,16 +489,6 @@ $salesId = isset($_GET['sales_id']) ? $_GET['sales_id'] : null;
     $("#order-item-confirm-table tbody").html(html);
     $("#modal-confirm").modal("show");
   });
-
-  /** 
-   * need to create function for:
-   * 3. submit order
-   * 
-   * 
-   * 
-   * */ 
-  
-
 
 </script>
 
