@@ -1,0 +1,23 @@
+{
+  "draw": 1,
+  "recordsTotal": 4,
+  "recordsFiltered": 4,
+  "data": [
+    {
+      "id": 1,
+      "name": "Coki Coki, Unilever",
+      "satuan_besar": "Kardus",
+      "satuan_tengah": "Box",
+      "jumlah_satuan_besar": 1,
+      "jumlah_satuan_tengah": 3
+    },
+    {
+      "id": 2,
+      "name": "Anggur Merah, Orang Tua",
+      "satuan_besar": "Kardus",
+      "satuan_tengah": "Krat",
+      "jumlah_satuan_besar": 3,
+      "jumlah_satuan_tengah": 1
+    }
+  ]
+}

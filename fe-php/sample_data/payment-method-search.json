@@ -1,0 +1,16 @@
+{
+  "items" : [
+    {
+      "id": 1,
+      "text": "Tunai"
+    },
+    {
+      "id": 2,
+      "text": "Transfer" 
+    },
+    {
+      "id": 3,
+      "text": "QRIS" 
+    }
+  ]
+}

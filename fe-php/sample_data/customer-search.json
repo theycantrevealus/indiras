@@ -1,0 +1,16 @@
+{
+  "items" : [
+    {
+      "id": 1,
+      "text": "UD Semangat Marbun", 
+      "rute": "Rute 3456",
+      "alamat": "Jl. Jamin Ginting No. 12"
+    },
+    {
+      "id": 2,
+      "text": "UD Semangat Lumbantoruan", 
+      "rute": "Rute 1234",
+      "alamat": "Jl. Gaharu No 123"
+    }
+  ]
+}
