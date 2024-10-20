@@ -29,8 +29,11 @@ class Lokasi extends Utility {
                 case 'toko':
                     return self::get_toko('master_toko');
                     break;
-                case 'get_toko':
-                    return self::get_toko($parameter);
+                case 'get_all_toko':
+                    return self::get_all_toko($parameter);
+                    break;
+                case 'get_rute':
+                    return self::get_rute($parameter);
                     break;
                 default:
                     # code...
@@ -53,6 +56,14 @@ class Lokasi extends Utility {
 
             case 'get_toko':
                 return self::get_toko($parameter);
+                break;
+
+            case 'get_rute':
+                return self::get_rute($parameter);
+                break;
+
+            case 'tambah_rute':
+                return self::tambah_rute($parameter);
                 break;
 
             default:
@@ -194,6 +205,184 @@ class Lokasi extends Utility {
         return $data;
     }
 
+    private function get_all_toko() {
+        $data = self::$query->select('master_toko', array(
+                'id',
+                'nama',
+                'alamat',
+                'kode',
+                'provinsi',
+                'kabupaten',
+                'kecamatan',
+                'kelurahan'
+            )
+        )
+            ->where(
+                array(
+                    'master_toko.deleted_at' => 'IS NULL',
+                    'AND',
+                    '(master_toko.nama' => 'ILIKE ' . '\'%' . $_GET['search'] . '%\'',
+                    'OR',
+                    'master_toko.kode' => 'ILIKE ' . '\'%' . $_GET['search'] . '%\')'
+                ), array()
+            )
+            ->execute();
+
+        foreach ($data['response_data'] as $key => $value) {
+            $data['response_data'][$key]['autonum'] = $autonum;
+
+            $KelurahanInfo = self::$query->select('master_wilayah_kelurahan', array(
+                'nama'
+            ))
+                ->where(array(
+                    'master_wilayah_kelurahan.id' => '= ?'
+                ), array(
+                    $value['kelurahan']
+                ))
+                ->execute();
+            $data['response_data'][$key]['alamat_kelurahan_parse'] = $KelurahanInfo['response_data'][0]['nama'];
+
+            $KecamatanInfo = self::$query->select('master_wilayah_kecamatan', array(
+                'nama'
+            ))
+                ->where(array(
+                    'master_wilayah_kecamatan.id' => '= ?'
+                ), array(
+                    $value['kecamatan']
+                ))
+                ->execute();
+            $data['response_data'][$key]['alamat_kecamatan_parse'] = $KecamatanInfo['response_data'][0]['nama'];
+
+            $KabupatenInfo = self::$query->select('master_wilayah_kabupaten', array(
+                'nama'
+            ))
+                ->where(array(
+                    'master_wilayah_kabupaten.id' => '= ?'
+                ), array(
+                    $value['kabupaten']
+                ))
+                ->execute();
+            $data['response_data'][$key]['alamat_kabupaten_parse'] = $KabupatenInfo['response_data'][0]['nama'];
+
+            $ProvinsiInfo = self::$query->select('master_wilayah_provinsi', array(
+                'nama'
+            ))
+                ->where(array(
+                    'master_wilayah_provinsi.id' => '= ?'
+                ), array(
+                    $value['provinsi']
+                ))
+                ->execute();
+            $data['response_data'][$key]['alamat_provinsi_parse'] = $ProvinsiInfo['response_data'][0]['nama'];
+
+            $autonum++;
+        }
+
+        $allData = array();
+        $Toko['response_data'] = array_merge($allData, $data['response_data']);
+        return $Toko;
+    }
+
+    private function get_rute($parameter) {
+        $Authorization = new Authorization();
+        $UserData = $Authorization->readBearerToken($parameter['access_token']);
+
+        if (isset($parameter['search']['value']) && !empty($parameter['search']['value'])) {
+            $paramData = array(
+                'master_rute.deleted_at' => 'IS NULL',
+                'AND',
+                'master_rute.nama' => 'ILIKE ' . '\'%' . $parameter['search']['value'] . '%\''
+            );
+
+            $paramValue = array();
+        } else {
+            $paramData = array(
+                'master_rute.deleted_at' => 'IS NULL'
+            );
+
+            $paramValue = array();
+        }
+
+
+        if ($parameter['length'] < 0) {
+            $data = self::$query->select('master_rute', array(
+                'id',
+                'nama',
+                'hari',
+                'created_at',
+                'updated_at'
+            ))
+                ->order(array(
+                    'updated_at' => 'DESC'
+                ))
+                ->where($paramData, $paramValue)
+                ->execute();
+        } else {
+//            $query = self::$pdo->prepare('
+//                SELECT id, nama, hari,
+//                       (SELECT COUNT(*) FROM public.master_rute_detail_salesWHERE public.master_rute_detail_sales.rute = public.master_rute.id) as count_sales,
+//                       (SELECT COUNT(*) FROM public.master_rute_detail_toko WHERE public.master_rute_detail_toko.rute = public.master_rute.id) as count_toko,
+//                                                                                created_at, updated_at FROM member WHERE uid = ? AND deleted_at IS NULL');
+//            $query->execute(array($parameter[2]));
+
+            $data = self::$query->select('master_rute', array(
+                'id',
+                'nama',
+                'hari',
+                'created_at',
+                'updated_at'
+            ))
+                ->order(array(
+                    'updated_at' => 'DESC'
+                ))
+                ->where($paramData, $paramValue)
+                ->offset(intval($parameter['start']))
+                ->limit(intval($parameter['length']))
+                ->execute();
+        }
+
+        $data['response_draw'] = $parameter['draw'];
+        $autonum = intval($parameter['start']) + 1;
+        foreach ($data['response_data'] as $key => $value) {
+            $data['response_data'][$key]['autonum'] = $autonum;
+
+            $data['response_data'][$key]['sales'] = self::$query->select('master_rute_detail_sales', array(
+                'id',
+            ))
+                ->where(array(
+                    'master_rute_detail_sales.rute' => '= ?'
+                ),
+                    array($value['id'])
+                )
+                ->execute()['response_data'];
+
+            $data['response_data'][$key]['toko'] = self::$query->select('master_rute_detail_toko', array(
+                'id',
+            ))
+                ->where(array(
+                    'master_rute_detail_toko.rute' => '= ?'
+                ),
+                    array($value['id'])
+                )
+                ->execute()['response_data'];
+
+            $autonum++;
+        }
+
+        $itemTotal = self::$query->select('master_toko', array(
+            'id'
+        ))
+            ->where($paramData, $paramValue)
+            ->execute();
+
+        $data['recordsTotal'] = count($itemTotal['response_data']);
+        $data['recordsFiltered'] = count($itemTotal['response_data']);
+        $data['length'] = intval($parameter['length']);
+        $data['start'] = intval($parameter['start']);
+
+        return $data;
+    }
+
     public function get_bed_detail($table, $parameter){
         $data = self::$query
             ->select($table,
@@ -287,6 +476,80 @@ class Lokasi extends Utility {
 
             return $bed;
         }
+    }
+
+    private function tambah_rute($parameter) {
+        $Authorization = new Authorization();
+        $UserData = $Authorization->readBearerToken($parameter['access_token']);
+        $day = array('Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu');
+//        $uid = parent::gen_uuid();
+        $salesData = [];
+        $tokoData = [];
+
+        $saveRute = self::$query
+            ->insert('master_rute', array(
+                    'nama'=> $day[intval($parameter['hari']) - 1] . ' ' . $parameter['week_no'],
+                    'hari'=>intval($parameter['hari']),
+                    'week_no'=>$parameter['week_no'],
+                    'created_at'=>parent::format_date(),
+                    'updated_at'=>parent::format_date(),
+                    'created_by'=>$UserData['data']->uid,
+                )
+            )
+            ->returning('id')
+            ->execute();
+        if($saveRute['response_result'] > 0) {
+            foreach ($parameter['sales'] as $key => $value) {
+                $saveSales = self::$query
+                    ->insert('master_rute_detail_sales', array(
+                            'sales'=> $value['id'],
+                            'rute' => $saveRute['response_unique'],
+                        )
+                    )
+                    ->execute();
+                array_push($salesData, $saveSales);
+            }
+
+            foreach ($parameter['toko'] as $key => $value) {
+                $saveToko = self::$query
+                    ->insert('master_rute_detail_toko', array(
+                            'toko'=> intval($value['id']),
+                            'rute' => $saveRute['response_unique'],
+                        )
+                    )
+                    ->execute();
+                array_push($tokoData, $saveToko);
+            }
+
+            $log = parent::log(array(
+                    'type'=>'activity',
+                    'column'=>array(
+                        'unique_target',
+                        'user_uid',
+                        'table_name',
+                        'action',
+                        'logged_at',
+                        'status',
+                        'login_id'
+                    ),
+                    'value'=>array(
+                        $saveRute['response_unique'],
+                        $UserData['data']->uid,
+                        'master_rute',
+                        'I',
+                        parent::format_date(),
+                        'N',
+                        $UserData['data']->log_id
+                    ),
+                    'class'=>__CLASS__
+                )
+            );
+        }
+
+        $saveRute['sales'] = $salesData;
+        $saveRute['toko'] = $tokoData;
+
+        return $saveRute;
     }
 
     private function edit_toko($table, $parameter) {

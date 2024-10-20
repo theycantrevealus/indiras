@@ -2289,7 +2289,8 @@ class Inventori extends Utility
         $data = self::$query->select('master_inv_satuan_detail', array(
             'satuan',
             'type',
-            'nilai'
+            'nilai',
+            'allow_sell'
         ))
             ->join('master_inv_satuan', array(
                 'nama'
@@ -9044,6 +9045,7 @@ class Inventori extends Utility
     $failed_data = array();
     $success_proceed = 0;
     $proceed_data = array();
+    $satuan_kecil = array();
 
     // $hapusUlangInv = self::$query->delete('master_inv')
     //     ->execute();
@@ -9057,9 +9059,9 @@ class Inventori extends Utility
         $itemSatuanMeta = [];
 
         //Proses satuan kecil
-        $satuanKecil = explode(':', $value['kecil']);
-        $namaSatuan = $satuanKecil[0];
-        $ratioSatuan = $satuanKecil[1];
+//        $satuanKecil = explode(':', $value['kecil']);
+        $namaSatuan = trim($value['kecil']);
+        $ratioSatuan = $value['kecil_ratio'];
 
         $satuan_check = self::$query->select('master_inv_satuan', array(
             'uid',
@@ -9158,7 +9160,8 @@ class Inventori extends Utility
         array_push($itemSatuanMeta, array(
             'satuan' => $targetSatuan,
             'type' => 'kecil',
-            'ratio' => $ratioSatuan
+            'ratio' => $ratioSatuan,
+            'allow_sell' => intval($value['allow_sell_kecil'])
         ));
 
 
@@ -9166,9 +9169,9 @@ class Inventori extends Utility
 
 
         //Proses satuan tengah
-        $satuanTengah = explode(':', $value['tengah']);
-        $namaSatuan = $satuanTengah[0];
-        $ratioSatuan = $satuanTengah[1];
+//        $satuanTengah = explode(':', $value['tengah']);
+        $namaSatuan = $value['tengah'];
+        $ratioSatuan = $value['tengah_ratio'];
 
         $satuan_check = self::$query->select('master_inv_satuan', array(
             'uid',
@@ -9267,7 +9270,8 @@ class Inventori extends Utility
         array_push($itemSatuanMeta, array(
             'satuan' => $targetSatuan,
             'type' => 'tengah',
-            'ratio' => $ratioSatuan
+            'ratio' => $ratioSatuan,
+            'allow_sell' => intval($value['allow_sell_tengah'])
         ));
 
 
@@ -9276,9 +9280,9 @@ class Inventori extends Utility
 
 
         //Proses satuan besar
-        $satuanBesar = explode(':', $value['besar']);
-        $namaSatuan = $satuanBesar[0];
-        $ratioSatuan = $satuanBesar[1];
+//        $satuanBesar = $value['besar'];
+        $namaSatuan = $value['besar'];
+        $ratioSatuan = $value['besar_ratio'];
 
         $satuan_check = self::$query->select('master_inv_satuan', array(
             'uid',
@@ -9377,7 +9381,8 @@ class Inventori extends Utility
         array_push($itemSatuanMeta, array(
             'satuan' => $targetSatuan,
             'type' => 'besar',
-            'ratio' => $ratioSatuan
+            'ratio' => $ratioSatuan,
+            'allow_sell' => intval($value['allow_sell_besar'])
         ));
 
 
@@ -9588,9 +9593,12 @@ class Inventori extends Utility
         'deleted_at'
       ))
         ->where(array(
-          'master_inv.nama' => 'ILIKE ' . '\'' . strtoupper(trim($parameter['search']['value'])) . '%\''
+            'master_inv.nama' => '= ?',
+            'AND',
+            'master_inv.kode_barang' => '= ?'
         ), array(
-          $value['nama']
+          trim($value['nama']),
+            trim($value['code'])
         ))
         ->execute();
       if (count($check['response_data']) > 0) {
@@ -9665,7 +9673,7 @@ class Inventori extends Utility
 
 
       // Prosess konversi satuan
-        $deleteOldConfig = self::$query->delete('master_inv_satuan_detail')
+        self::$query->delete('master_inv_satuan_detail')
             ->where(array(
                 'item' => '= ?'
             ), array(
@@ -9674,12 +9682,13 @@ class Inventori extends Utility
             ->execute();
 
         foreach ($itemSatuanMeta as $satuanKey => $satuanValue) {
-            self::$query->insert('master_inv_satuan_detail', array(
+            $satuanMetaProcess = self::$query->insert('master_inv_satuan_detail', array(
                 'item' => $targetItem,
                 'satuan' => $satuanValue['satuan'],
-                'nilai' => $satuanValue['ratio'],
-                'type' => $satuanValue['type']
-            ))->execute();;
+                'nilai' => floatval($satuanValue['ratio']),
+                'type' => $satuanValue['type'],
+                'allow_sell' => intval($satuanValue['allow_sell']),
+            ))->execute();
         }
     }
 

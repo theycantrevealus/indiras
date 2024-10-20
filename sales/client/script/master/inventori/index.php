@@ -29,7 +29,6 @@
           } else {
             returnedData = response.response_package.response_data;
           }
-          console.log(returnedData);
 
           response.draw = parseInt(response.response_package.response_draw);
           response.recordsTotal = response.response_package.recordsTotal;
@@ -101,21 +100,21 @@
               "data": null,
               render: function(data, type, row, meta) {
                   var meta = row["satuan"].reduce((a, v) => ({ ...a, [v["type"]]: v}), {});
-                  return "<center><h5>" + meta["besar"]?.nilai + "</h5>" + meta["besar"]?.nama + "</center>";
+                  return "<center><h5 class=\"" +  (meta["besar"]?.allow_sell > 0 ? "text-success" : "text-danger") + "\">" + meta["besar"]?.nilai + "</h5>" + meta["besar"]?.nama + "</center>";
               }
           },
           {
               "data": null,
               render: function(data, type, row, meta) {
                   var meta = row["satuan"].reduce((a, v) => ({ ...a, [v["type"]]: v}), {});
-                  return "<center><h5>" + meta["tengah"]?.nilai + "</h5>" + meta["tengah"]?.nama + "</center>";
+                  return "<center><h5 class=\"" +  (meta["tengah"]?.allow_sell > 0 ? "text-success" : "text-danger") + "\">" + meta["tengah"]?.nilai + "</h5>" + meta["tengah"]?.nama + "</center>";
               }
           },
           {
               "data": null,
               render: function(data, type, row, meta) {
                   var meta = row["satuan"].reduce((a, v) => ({ ...a, [v["type"]]: v}), {});
-                  return "<center><h5>" + meta["kecil"]?.nilai + "</h5>" + meta["kecil"]?.nama + "</center>";
+                  return "<center><h5 class=\"" +  (meta["kecil"]?.allow_sell > 0 ? "text-success" : "text-danger") + "\">" + meta["kecil"]?.nilai + "</h5>" + meta["kecil"]?.nama + "</center>";
               }
           },
         {
@@ -154,6 +153,7 @@
         cache: false,
         processData: false,
         success: function(response) {
+
           var data = response.response_package;
           generated_data = data.row_data;
           $("#csv_file_data").html("");
@@ -204,6 +204,7 @@
               super: "farmasi"
             },
             success: function(response) {
+                console.clear();
               console.log(response.response_package);
               var html = "Imported : " + response.response_package.success_proceed + "<br />";
               /*html += "Imported : " + response.response_package.success_proceed + "<br />";

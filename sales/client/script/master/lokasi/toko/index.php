@@ -61,7 +61,7 @@
                 },
                 {
                     "data" : null, render: function(data, type, row, meta) {
-                        return "[<span koordinat=\"" + row["koordinat"] + "\" id=\"kode_" + row["id"] + "\">" + row["kode"] + "</span>]<span id=\"nama_" + row["id"] + "\">" + row["nama"] + "</span><br /><span id=\"alamat_" + row["id"] + "\">" + row["alamat"] + "</span>";
+                        return "<b><span koordinat=\"" + row["koordinat"] + "\" id=\"kode_" + row["id"] + "\">" + row["kode"] + "</span></b> - <span id=\"nama_" + row["id"] + "\">" + row["nama"] + "</span><br /><span id=\"alamat_" + row["id"] + "\">" + row["alamat"] + "</span>";
                     }
                 },
                 {
@@ -170,7 +170,7 @@
                 } else {
                     form_data = {
                         "request": "edit_toko",
-                        "uid": selectedUID,
+                        "id": selectedUID,
                         "nama": nama,
                         "kode": kode,
                         "alamat": alamat,
@@ -296,7 +296,7 @@
 </script>
 
 <div id="form-tambah" class="modal fade" role="dialog" aria-labelledby="modal-large-title" aria-hidden="true" data-backdrop="static" data-keyboard="false">
-    <div class="modal-dialog modal-md bg-danger" role="document">
+    <div class="modal-dialog modal-md" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="modal-large-title">Tambah Toko</h5>
