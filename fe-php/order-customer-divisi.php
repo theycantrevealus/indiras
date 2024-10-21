@@ -34,28 +34,29 @@
     
       <div class="body-wrapper">
         <div class="container-fluid">
-        <div class="card bg-info-subtle shadow-none position-relative overflow-hidden mb-4">
+          <div class="col-sm-12 text-start">
+            <a id="addRow" href="order-data.php" class="btn btn-danger">
+              <i class="ti ti-arrow-left fs-4"></i>Kembali
+            </a>
+          </div>
+          <hr />
+          <div class="card bg-warning-subtle shadow-none position-relative overflow-hidden mb-4">
             <div class="card-body px-4 py-3">
               <div class="row align-items-center">
                 <div class="col-9">
-                  <h4 class="fw-semibold mb-8">Daftar Toko</h4>
+                  <h4 class="fw-semibold mb-8">Daftar Divisi</h4>
                   <nav aria-label="breadcrumb">
                     <ol class="breadcrumb">
                       <li class="breadcrumb-item">
                         <a class="text-muted text-decoration-none" href="order-data.php">Order</a>
                       </li>
-                      <li class="breadcrumb-item" aria-current="page">Daftar Order</li>
+                      <li class="breadcrumb-item" aria-current="page">Daftar Divisi</li>
                     </ol>
                   </nav>
                 </div>
               </div>
             </div>
           </div>
-            <div class="col-sm-12 text-start">
-              <a id="addRow" href="order-customer-detail.php" class="btn btn-primary">
-                <i class="ti ti-plus fs-4"></i>Tambah
-              </a>
-            </div>
           <br />
           <div class="datatables"> 
             <div class="card">
@@ -63,14 +64,14 @@
                 <div class="col-md-12">
                   <div class="col-sm-12 text-end">
                     <button id="btnSearch" href="order-customer-detail.php" class="btn btn-warning">
-                      <i class="ti ti-search fs-4"></i>Cari Toko 
+                      <i class="ti ti-search fs-4"></i>Cari Divisi 
                     </button>
                   </div>
                 </div>
                 <div class="table-responsive mt-3">
-                  <h5>Daftar Toko: </h5>
+                  <h5>Daftar Divisi: </h5>
                   <hr />
-                  <div id="list-view">
+                  <div id="list-view" class="col-md-12 row">
 
                   </div>
                 </div>
@@ -91,19 +92,11 @@
           <div class="modal-content">
             <div class="modal-header d-flex align-items-center">
               <h4 class="modal-title" id="myLargeModalLabel">
-                Cari Toko 
+                Cari Divisi 
               </h4>
               <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-              <div class="col-md-12">
-                <div class="col-md-12 mb-2 row">
-                  <label for="customer-rute" class="col-md-12 col-form-label">Rute</label>
-                  <div class="col-md-12">
-                    <select class="form-control" id="customer-rute"></select>
-                  </div>
-                </div>
-              </div>
               <div class="col-md-12">
                 <div class="col-md-12 mb-3 row">
                   <label for="customer-search" class="col-md-12 col-form-label">Kata kunci pencarian</label>
@@ -140,71 +133,37 @@
 
 <script>
 
-  let apiUrl = "./sample_data/order-data.json";
+  let apiUrl = "./sample_data/order-data-divisi-all.json";
 
   $("#btnSearch").click(function() {
     $("#modal-search").modal("show");
   });
 
   $("#btnSubmitSearch").click(function() {
-    const rute = $("#customer-rute").val();
     const params = $("#customer-search").val();
 
-    refreshToko(rute, params);
+    refreshDivisi(params);
     $("#modal-search").modal("hide");
   });
 
-  $(`#customer-rute`).select2({
-    dropdownParent: $("#modal-search"),
-    placeholder: "Pilih rute...",
-    ajax: {
-      url: "./sample_data/order-rute-search.json",
-      dataType: "json",
-      delay: 250,
-      data: function (params) {
-        return {
-          q: params.term, // search term
-          page: params.page,
-        };
-      },
-      processResults: function (data, params) {
-        params.page = params.page || 1;
+  refreshDivisi();
 
-        return {
-          results: data.items,
-          pagination: params.page,
-        };
-      },
-    },
-    minimumInputLength: 1
-  });
-
-  refreshToko();
-
-  function refreshToko(rute = "", params = "") { 
+  function refreshDivisi(params = "") { 
     $.ajax({
       type: "GET",
-      url: apiUrl + `?rute=${rute}&params=${params}`,
+      url: apiUrl + `?params=${params}`,
       dataType: "JSON",
       success: function (response) {
         let html = "";
         response.data.forEach(function(item) {
           html += `
-              <a href="order-customer-divisi.php?customer_id=${item.id}" class="btn btn-rounded btn-outline-info d-flex w-100 d-block text-primary p-3">
+            <div class="col-md-4 mb-3">
+              <a href="order-customer-detail.php?divisi_id=${item.id}&customer_id=<?= $_GET['customer_id'] ?>" class="btn btn-rounded btn-outline-warning d-flex w-100 d-block text-primary p-3">
                  <div class="col-md-12 text-start">
                     <h4 class="card-title mb-1 text-dark">${item.nama}</h4>
-                    <hr />
-                    <div>
-                      <span class="fs-2 d-flex align-items-center text-dark">
-                        <i class="ti ti-send text-primary fs-3 me-1"></i> ${item.rute}
-                      </span>
-                      <span class="fs-2 d-flex align-items-center text-dark">
-                        <i class="ti ti-map-pin text-danger fs-3 me-1"></i> ${item.alamat}
-                      </span>
-                    </div>
                   </div>   
-              </a>
-            &nbsp;
+                </a>
+              </div>
            `;
         });
         

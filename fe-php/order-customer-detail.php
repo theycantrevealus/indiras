@@ -41,6 +41,12 @@ $customerId = isset($_GET['customer_id']) ? $_GET['customer_id'] : null;
     
       <div class="body-wrapper">
         <div class="container-fluid">
+        <div class="col-sm-12 text-start">
+          <a href="order-customer-divisi.php?customer_id=<?= $_GET['customer_id'] ?>" class="btn btn-danger">
+            <i class="ti ti-arrow-left fs-4"></i>Kembali
+          </a>
+        </div>
+        <hr />
         <div class="card bg-info-subtle shadow-none position-relative overflow-hidden mb-4">
           <div class="card-body px-4 py-3">
               <div class="row align-items-center">
@@ -78,6 +84,7 @@ $customerId = isset($_GET['customer_id']) ? $_GET['customer_id'] : null;
                       <div class="col-md-10">
                         <?php 
                           if ($customerId) {
+                            echo '<input hidden class="form-control" type="text" id="customer-id" disabled>';
                             echo '<input class="form-control" type="text" id="customer-name" disabled>';
                           } else {
                             echo '<select class="form-control" id="customer-name"></select>';
@@ -111,6 +118,37 @@ $customerId = isset($_GET['customer_id']) ? $_GET['customer_id'] : null;
                       </div>
                     </div>
                     <hr />
+                    <div class="datatables"> 
+                      <div class="mb-2">
+                        <div class="col-md-12 row">   
+                          <!-- <div class="mb-2 col-md-6">
+                            <select class="select2-data-ajax form-control" id="item-pick"></select>
+                          </div> -->
+                          <div class="col-md-12">
+                            <button type="button" id="tambah-item" class="btn btn-primary mb-2">
+                              <i class="ti ti-plus fs-4"></i>Tambah Item
+                            </button>
+                          </div>
+                        </div> 
+                      </div>
+                      <div class="table-responsive mt-3">
+                        <table id="order-item-table" class="table w-100 table-sm table-bordered display text-nowrap">
+                          <thead>
+                            <!-- start row -->
+                            <tr>
+                              <th width="40%">Item</th>
+                              <th>Satuan Besar</th>
+                              <th>Satuan Tengah</th>
+                              <th>Aksi</th>
+                            </tr>
+                            <!-- end row -->
+                          </thead>
+                          <tbody>
+                          </tbody>
+                        </table>
+                      </div>
+                      <!-- end Row selection and deletion (single row) -->
+                    </div>  
                     <div class="col-md-12 text-end">
                       <div class="mt-3 mt-md-0">
                         <button type="button" id="btnSubmit" class="btn btn-success hstack gap-6">
@@ -124,49 +162,13 @@ $customerId = isset($_GET['customer_id']) ? $_GET['customer_id'] : null;
               </form>
             </div>
           </div>
-          <div class="datatables"> 
-            <div class="card">
-              <div class="card-body">
-                <div class="mb-2">
-                  <div class="col-md-12 row">   
-                    <div class="mb-2 col-md-6">
-                      <select class="select2-data-ajax form-control" id="item-pick"></select>
-                    </div>
-                    <div class="col-md-2">
-                      <button id="tambah-item" class="btn btn-primary mb-2">
-                        <i class="ti ti-plus fs-4"></i>Tambah
-                      </button>
-                    </div>
-                  </div> 
-                </div>
-                <div class="table-responsive mt-3">
-                  <table id="order-item-table" class="table w-100 table-sm table-bordered display text-nowrap">
-                    <thead>
-                      <!-- start row -->
-                      <tr>
-                        <th width="40%">Item</th>
-                        <th>Satuan Besar</th>
-                        <th>Satuan Tengah</th>
-                        <th>Aksi</th>
-                      </tr>
-                      <!-- end row -->
-                    </thead>
-                    <tbody>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-            <!-- end Row selection and deletion (single row) -->
-          </div>
         </div>
       </div>
       <script>
-  function handleColorTheme(e) {
-    document.documentElement.setAttribute("data-color-theme", e);
-  }
-</script>
-  
+        function handleColorTheme(e) {
+          document.documentElement.setAttribute("data-color-theme", e);
+        }
+      </script>
     </div>
   </div>
 
@@ -226,10 +228,95 @@ $customerId = isset($_GET['customer_id']) ? $_GET['customer_id'] : null;
           </button>
         </div>
       </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="modal-tambah-item" tabindex="-1" aria-labelledby="bs-example-modal-lg" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable modal-xl">
+      <div class="modal-content">
+        <div class="modal-header d-flex align-items-center">
+          <h4 class="modal-title" id="myLargeModalLabel">
+            Pilih item 
+          </h4>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="col-md-12">
+            <div class="col-md-12 mb-3 row">
+              <label for="customer-search" class="col-md-12 col-form-label">Cari</label>
+              <div class="col-md-12">
+                <input class="form-control" type="text" id="customer-search" placeholder="Ketikkan kata kunci...">
+              </div>
+            </div>
+          </div>
+          <div class="col-md-12 row" id="list-order-pick">
+
+          </div>
+          <!-- <table id="order-item-pick-table" class="table w-100 table-sm table-bordered display text-nowrap">
+            <thead>
+              <tr>
+                <th width="40%">Item</th>
+                <th>Satuan<br /> Besar</th>
+                <th>Satuan<br /> Tengah</th>
+              </tr>
+            </thead>
+            <tbody>
+            </tbody>
+          </table> -->
+        </div>
+      </div>
       <!-- /.modal-content -->
     </div>
       <!-- /.modal-dialog -->
-  <div>
+  </div>
+
+  <div class="modal fade" id="modal-tambah-item-konfirm" tabindex="-1" aria-labelledby="bs-example-modal-lg" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable modal-lg">
+      <div class="modal-content">
+        <div class="modal-header d-flex align-items-center">
+          <h4 class="modal-title" id="myLargeModalLabel">
+            Pilih item 
+          </h4>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="col-md-12">
+            <div class="col-md-12 mb-2 row">
+              <label for="konfirm-nama-item" class="col-md-2 col-form-label">Nama Item</label>
+              <div class="col-md-4">
+                <input class="form-control" type="text" id="konfirm-nama-item" disabled>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-12">
+            <div class="col-md-12 mb-2 row">
+              <label for="konfirm-satuan-besar" class="col-md-2 col-form-label">Satuan Besar</label>
+              <div class="col-md-12 input-group">
+                <input class="form-control" type="text" id="konfirm-satuan-besar" aria-describedby="caption-konfirm-satuan-besar">
+                <span class="input-group-text" id="caption-konfirm-satuan-besar"></span>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-12">
+            <div class="col-md-12 mb-3 row">
+              <label for="konfirm-satuan-tengah" class="col-md-2 col-form-label">Satuan Tengah</label>
+              <div class="col-md-12 input-group">
+                <input class="form-control" type="text" id="konfirm-satuan-tengah" aria-describedby="caption-konfirm-satuan-tengah">
+                <span class="input-group-text" id="caption-konfirm-satuan-tengah"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-success waves-effect text-start" data-bs-dismiss="modal">
+            Simpan
+          </button>
+        </div>
+      </div>
+      <!-- /.modal-content -->
+    </div>
+      <!-- /.modal-dialog -->
+  </div>
 
 <div class="dark-transparent sidebartoggler"></div>
 
@@ -309,6 +396,61 @@ $customerId = isset($_GET['customer_id']) ? $_GET['customer_id'] : null;
 
   let counter = 0;
   $("#tambah-item").click(function() {
+    $("#modal-tambah-item").modal("show");
+
+    const apiSearch = `./sample_data/order-item-list.json`;
+    $.ajax({
+      type: "GET",
+      url: apiSearch,
+      dataType: "JSON",
+      success: function (response) {
+        let html = "";
+        response.data.forEach(function(item) {
+          html += `
+            <div class="col-md-4 mb-2">
+              <button class="btn btn-rounded btn-outline-info d-flex w-100 d-block text-primary p-2 tambah-item-detail" data-item-id="${item.id}" data-item-name="${item.name}" data-satuan-besar="${item.satuan_besar}" data-satuan-tengah="${item.satuan_tengah}">
+                 <div class="col-md-12 text-start">
+                    <h4 class="card-title mb-1 text-dark">${item.name}</h4>
+                    <table>
+                      <tbody>
+                        <tr>
+                          <td>
+                            <span class="fs-2 d-flex align-items-center text-dark">
+                              <i class="ti ti-package text-primary fs-3 me-1"></i>Satuan Besar
+                            </span>
+                          </td>
+                          <td>
+                            <span class="fs-2 d-flex align-items-center text-dark">
+                              : &nbsp; <b> ${item.satuan_besar} </b>
+                            </span>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>
+                            <span class="fs-2 d-flex align-items-center text-dark">
+                              <i class="ti ti-briefcase text-warning fs-3 me-1"></i>Satuan Tengah
+                            </span>
+                          </td>
+                          <td>
+                            <span class="fs-2 d-flex align-items-center text-dark">
+                              : &nbsp; <b> ${item.satuan_tengah} </b>
+                            </span>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                    
+                  </div>   
+                </button>
+              </div>
+          `;
+        });
+
+        $("#list-order-pick").html(html);
+      }
+    });
+
+    /*
     let itemSelected = $("#item-pick").select2('data');
     if (itemSelected.length == 0) {
       alert('Pilih item lebih dulu...');
@@ -355,6 +497,19 @@ $customerId = isset($_GET['customer_id']) ? $_GET['customer_id'] : null;
 
     $("#order-item-table > tbody:last-child").append(htmlAdd);
     $("#item-pick").select2("val", "");
+    */
+
+  });
+
+  $("#list-order-pick").on('click', '.tambah-item-detail', function() {
+    const namaItem = $(this).data("item-name");
+    const satuanBesar = $(this).data("satuan-besar");
+    const satuanTengah = $(this).data("satuan-tengah");
+
+    $("#konfirm-nama-item").val(namaItem);
+    $("#caption-konfirm-satuan-besar").html(satuanBesar);
+    $("#caption-konfirm-satuan-tengah").html(satuanTengah);
+    $("#modal-tambah-item-konfirm").modal("show");
   });
 
   $(`#customer-payment-method`).select2({
@@ -380,6 +535,7 @@ $customerId = isset($_GET['customer_id']) ? $_GET['customer_id'] : null;
     },
   });
 
+  /*
   $(`#item-pick`).select2({
     placeholder: "Pilih item...",
     ajax: {
@@ -403,6 +559,7 @@ $customerId = isset($_GET['customer_id']) ? $_GET['customer_id'] : null;
     },
     minimumInputLength: 1
   });
+  */
 
   $("#order-item-table tbody").on('click', '.delete-order', function() {
     const itemId = $(this).data('item-id');
@@ -421,11 +578,7 @@ $customerId = isset($_GET['customer_id']) ? $_GET['customer_id'] : null;
   });
 
   $("#btnSubmit").click(function() {
-    let toko = $("#customer-name").select2('data');
-    if (toko.length == 0) {
-      alert('Pilih toko lebih dahulu...');
-      return false;
-    }
+
 
     let metodeBayar = $("#customer-payment-method").select2('data');
     if (metodeBayar.length == 0) {
@@ -438,10 +591,22 @@ $customerId = isset($_GET['customer_id']) ? $_GET['customer_id'] : null;
       return false;
     }
 
-    $("#confirm_toko").html(toko[0].text);
-    $("#confirm_rute").html(toko[0].rute);
-    $("#confirm_alamat").html(toko[0].alamat);
-    $("#confirm_pembayaran").html(metodeBayar[0].text);
+    if (`<?= $customerId ?>` == "") {
+      let toko = $("#customer-name").select2('data');
+      if (toko.length == 0) {
+        alert('Pilih toko lebih dahulu...');
+        return false;
+      }
+
+      $("#confirm_toko").html(toko[0].text);
+      $("#confirm_rute").html(toko[0].rute);
+      $("#confirm_alamat").html(toko[0].alamat);
+      $("#confirm_pembayaran").html(metodeBayar[0].text);
+    } else {
+      $("#confirm_toko").html($("#customer-name").val());
+      $("#confirm_rute").html($("#customer-rute").val());
+      $("#confirm_alamat").html($("#customer-alamat").val());
+    }
     
     $('.satuan_besar').each(function(i, obj) {
       const itemId = $(this).data("id-item");
