@@ -1,6 +1,12 @@
 <!DOCTYPE html>
 <html lang="en" dir="ltr" data-bs-theme="light" data-color-theme="Blue_Theme" data-layout="vertical">
 
+<?php 
+
+$customerId = isset($_GET['customer_id']) ? $_GET['customer_id'] : null; 
+
+?>
+
 <head>
   <!-- Required meta tags -->
   <meta charset="UTF-8" />
@@ -57,7 +63,8 @@
               </div>
             </div>
           </div>
-          <br />
+          <h5>Toko : <span id="toko-nama"></span></h5>
+          <hr />
           <div class="datatables"> 
             <div class="card">
               <div class="card-body">
@@ -146,6 +153,21 @@
     $("#modal-search").modal("hide");
   });
 
+  if (`<?= $customerId ?>` == "") {
+    $("#toko-nama").text("Belum dipilih");
+  } else {
+    const apiUrl = `./sample_data/customer-search-by-id.json`; // ?customer_id=`<?= $customerId ?>`;
+
+    $.ajax({
+      type: "GET",
+      url: apiUrl,
+      dataType: "JSON",
+      success: function (response) {
+        $("#toko-nama").text(response.nama);
+      }
+    });
+  }
+
   refreshDivisi();
 
   function refreshDivisi(params = "") { 
@@ -158,7 +180,7 @@
         response.data.forEach(function(item) {
           html += `
             <div class="col-md-4 mb-3">
-              <a href="order-customer-detail.php?divisi_id=${item.id}&customer_id=<?= $_GET['customer_id'] ?>" class="btn btn-rounded btn-outline-warning d-flex w-100 d-block text-primary p-3">
+              <a href="order-customer-detail.php?divisi_id=${item.id}&customer_id=<?= $customerId ?>" class="btn btn-rounded btn-outline-warning d-flex w-100 d-block text-primary p-3">
                  <div class="col-md-12 text-start">
                     <h4 class="card-title mb-1 text-dark">${item.nama}</h4>
                   </div>   

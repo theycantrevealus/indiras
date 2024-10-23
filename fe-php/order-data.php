@@ -52,7 +52,7 @@
             </div>
           </div>
             <div class="col-sm-12 text-start">
-              <a id="addRow" href="order-customer-detail.php" class="btn btn-primary">
+              <a id="addRow" href="order-customer-divisi.php" class="btn btn-primary">
                 <i class="ti ti-plus fs-4"></i>Tambah
               </a>
             </div>

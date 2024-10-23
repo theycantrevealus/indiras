@@ -12,3 +12,19 @@
 
   <script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.8/dist/iconify-icon.min.js"></script>
   <script src="./assets/libs/datatables.net/js/jquery.dataTables.min.js"></script>
+
+  <script>
+
+    function ajaxLoader(selector, action) {
+    	var $class = "ajax-loader";
+    
+    	$html = '<div class="'+$class+'"><div></div><div></div><div></div><div></div></div>';
+    
+    	if(action == "show") {
+    		$($html).insertBefore(selector);
+    	} else if(action == "hide") {
+    		$("."+$class).hide();
+    	}  
+    }
+
+  </script>
