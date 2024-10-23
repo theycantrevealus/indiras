@@ -35,9 +35,15 @@ class Inventori extends Utility
         case 'lend_detail':
           return self::lend_detail($parameter[2]);
           break;
+          case 'item':
+              return self::get_item_list($parameter);
+              break;
         case 'kategori':
           return self::get_kategori();
           break;
+          case 'supplier':
+              return self::get_supplier($parameter);
+              break;
         case 'kategori_detail':
           return self::get_kategori_detail($parameter[2]);
           break;
@@ -1977,6 +1983,144 @@ class Inventori extends Utility
       $autonum++;
     }
     return $data;
+  }
+
+  private function get_item_list($parameter) {
+      $params = $parameter[count($parameter) - 2];
+      if(isset($params['params']) && isset($params['divisi'])) {
+          $paramData = array(
+              '(master_inv.nama' => 'ILIKE ' . '\'%' . $params['params'] . '%\'',
+              'OR',
+              'master_inv.kode_barang' => 'ILIKE ' . '\'%' . $params['params'] . '%\')',
+              'AND',
+              'master_inv.supplier' => '= ?',
+              'AND',
+              'master_inv.deleted_at' => 'IS NULL'
+          );
+
+          $paramValue = array($params['divisi']);
+
+          $filteredString = 'WHERE (master_inv.nama ILIKE ' . '\'%' . $params['params'] . '%\' OR master_inv.kode_barang ILIKE ' . '\'%' . $params['params'] . '%\') AND master_inv.supplier = \'' . $params['divisi'] . '\' AND master_inv.deleted_at IS NULL';
+      } else {
+          if(isset($params['params'])) {
+              $paramData = array(
+                  '(master_inv.nama' => 'ILIKE ' . '\'%' . $params['params'] . '%\'',
+                  'OR',
+                  'master_inv.kode_barang' => 'ILIKE ' . '\'%' . $params['params'] . '%\')',
+                  'AND',
+                  'master_inv.deleted_at' => 'IS NULL'
+              );
+
+              $paramValue = array();
+              $filteredString = 'WHERE (master_inv.nama ILIKE ' . '\'%' . $params['params'] . '%\' OR master_inv.kode_barang ILIKE ' . '\'%' . $params['params'] . '%\') AND master_inv.deleted_at IS NULL';
+          } else if(isset($params['divisi'])) {
+              $paramData = array(
+                  'master_inv.supplier' => '= ?',
+                  'AND',
+                  'master_inv.deleted_at' => 'IS NULL'
+              );
+
+              $paramValue = array($params['divisi']);
+
+              $filteredString = 'WHERE master_inv.supplier = \'' . $params['divisi'] . '\' AND master_inv.deleted_at IS NULL';
+          } else {
+              $filteredString = '';
+          }
+      }
+
+      $data = self::$query->select('master_inv', array(
+          'uid', 'kode_barang as kode', 'nama'
+      ))
+          ->join('master_inv_supplier', array(
+              'nama as divisi'
+          ))
+          ->on(array(
+              array('master_inv.supplier', '=', 'master_inv_supplier.uid')
+          ))
+          ->where($paramData, $paramValue)
+          ->offset(intval($params['start']) ?? 0)
+          ->limit(intval($params['length']) > 0 ? intval($params['length']) : 10)
+          ->execute();
+
+      $autonum = intval($params['start']) > 0 ? intval($params['start']) : 1;
+      foreach ($data['response_data'] as $key => $value) {
+          $data['response_data'][$key]['autonum'] = $autonum;
+          $dataSatuan = self::$query->select('master_inv_satuan_detail', array(
+              'nilai', 'type', 'allow_sell'
+          ))
+              ->join('master_inv_satuan', array('nama as nama_satuan'))
+              ->on(array(
+                  array('master_inv_satuan_detail.satuan', '=', 'master_inv_satuan.uid')
+              ))
+              ->where(array(
+                  'master_inv_satuan_detail.item' => '= ?'
+              ), array(
+                  $value['uid']
+              ))
+              ->execute();
+          foreach ($dataSatuan['response_data'] as $sKey => $sValue) {
+              $data['response_data'][$key]['satuan_' . $sValue['type']] = array(
+                  'ratio' => $sValue['nilai'],
+                  'nama' => $sValue['nama_satuan']
+              );
+          }
+          $autonum++;
+      }
+
+      $query = self::$pdo->prepare('SELECT COUNT(*) as count FROM master_inv WHERE deleted_at IS NULL');
+      $query->execute(array());
+      if($query->rowCount() > 0) {
+          $read = $query->fetchAll(\PDO::FETCH_ASSOC);
+          $data['recordsTotal'] = $read[0]['count'];
+      } else {
+          $data['recordsTotal'] = 0;
+      }
+
+
+      $query = self::$pdo->prepare('SELECT COUNT(*) as count FROM master_inv ' . $filteredString);
+      $query->execute(array());
+      if($query->rowCount() > 0) {
+          $read = $query->fetchAll(\PDO::FETCH_ASSOC);
+          $data['recordsFiltered'] = $read[0]['count'];
+      } else {
+          $data['recordsFiltered'] = 0;
+      }
+
+      unset($data['response_query']);
+
+
+      return $data;
+  }
+
+  private function get_supplier($parameter) {
+      $params = $parameter[count($parameter) - 2];
+
+      if(isset($params['params'])) {
+          $paramData = array(
+              '(master_inv_supplier.nama' => 'ILIKE ' . '\'%' . $params['params'] . '%\'',
+              'OR',
+              'master_inv_supplier.kode' => 'ILIKE ' . '\'%' . $params['params'] . '%\')',
+              'AND',
+              'master_inv_supplier.deleted_at' => 'IS NULL'
+          );
+
+          $paramValue = array();
+      } else {
+          $paramData = array(
+              'master_inv_supplier.deleted_at' => 'IS NULL',
+          );
+
+          $paramValue = array();
+      }
+
+      $data = self::$query->select('master_inv_supplier', array(
+          'uid', 'kode', 'nama'
+      ))
+          ->where($paramData, $paramValue)
+          ->execute();
+      unset($data['response_query']);
+
+      return $data;
   }
 
   private function get_kategori_detail($parameter)
@@ -9675,7 +9819,7 @@ class Inventori extends Utility
       // Prosess konversi satuan
         self::$query->delete('master_inv_satuan_detail')
             ->where(array(
-                'item' => '= ?'
+                'master_inv_satuan_detail.item' => '= ?'
             ), array(
                 $targetItem
             ))

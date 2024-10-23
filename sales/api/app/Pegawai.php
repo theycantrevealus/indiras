@@ -229,7 +229,7 @@ class Pegawai extends Utility {
                 $iss = __HOSTNAME__;
                 $iat = time();
                 $nbf = $iat + 10;
-                $exp = $iat + 30;
+                $exp = $iat + 30000;
                 $aud = 'users_library';
                 if($read[0]['jabatan'] == __UIDDOKTER__) {
                     $_SESSION['unit'] = $Unit_Info['response_data'][0];
@@ -321,36 +321,34 @@ class Pegawai extends Utility {
                 }
 
                 //Update Login Status
-                $LoginStatus = self::$query->select('pegawai_kehadiran_real_time', array(
-                    'pegawai'
-                ))
-                    ->where(array(
-                        'pegawai_kehadiran_real_time.pegawai' => '= ?'
-                    ), array(
-                        $read[0]['uid']
-                    ))
-                    ->execute();
-
-                if(count($LoginStatus['response_data']) > 0) {
-                    // Update
-                    $LoginState = self::$query->update('pegawai_kehadiran_real_time', array(
-                        'status' => 'A'
-                    ))
-                        ->where(array(
-                            'pegawai_kehadiran_real_time.pegawai' => '= ?'
-                        ), array(
-                            $read[0]['uid']
-                        ))
-                        ->execute();
-                } else {
-                    // New
-                    $LoginState = self::$query->insert('pegawai_kehadiran_real_time', array(
-                        'pegawai' => $read[0]['uid'],
-                        'jabatan' => $read[0]['jabatan'],
-                        'status' => 'A'
-                    ))
-                        ->execute();
-                }
+//                $LoginStatus = self::$query->select('pegawai_kehadiran_real_time', array(
+//                    'pegawai'
+//                ))
+//                    ->where(array(
+//                        'pegawai_kehadiran_real_time.pegawai' => '= ?'
+//                    ), array(
+//                        $read[0]['uid']
+//                    ))
+//                    ->execute();
+//
+//                if(count($LoginStatus['response_data']) > 0) {
+//                    $LoginState = self::$query->update('pegawai_kehadiran_real_time', array(
+//                        'status' => 'A'
+//                    ))
+//                        ->where(array(
+//                            'pegawai_kehadiran_real_time.pegawai' => '= ?'
+//                        ), array(
+//                            $read[0]['uid']
+//                        ))
+//                        ->execute();
+//                } else {
+//                    $LoginState = self::$query->insert('pegawai_kehadiran_real_time', array(
+//                        'pegawai' => $read[0]['uid'],
+//                        'jabatan' => $read[0]['jabatan'],
+//                        'status' => 'A'
+//                    ))
+//                        ->execute();
+//                }
 
 
 

@@ -30,7 +30,6 @@
                     } else {
                         returnedData = response.response_package.response_data;
                     }
-                    console.log(returnedData);
 
                     response.draw = parseInt(response.response_package.response_draw);
                     response.recordsTotal = response.response_package.recordsTotal;
@@ -69,12 +68,12 @@
                 },
                 {
                     "data" : null, render: function(data, type, row, meta) {
-                        return "<span id=\"toko_" + row["id"] + "\">" + row["toko"].length + "</span>";
+                        return "<span meta='" + JSON.stringify(row["toko"]) + "' id=\"toko_" + row["id"] + "\">" + row["toko"].length + "</span>";
                     }
                 },
                 {
                     "data" : null, render: function(data, type, row, meta) {
-                        return "<span id=\"sales_" + row["id"] + "\">" + row["sales"].length + "</span>";
+                        return "<span meta='" + JSON.stringify(row['sales']) + "' id=\"sales_" + row["id"] + "\">" + row["sales"].length + "</span>";
                     }
                 },
             ]
@@ -103,13 +102,56 @@
             }
         });
 
+        // EDIT TOKO
         $("body").on("click", ".btn-edit-rute", function() {
             var uid = $(this).attr("id").split("_");
             uid = uid[uid.length - 1];
             selectedUID = uid;
             MODE = "edit";
 
-            alert(uid);
+
+            var hari = $("#nama_" + uid).html().trim().split(" ");
+            var hariVal = $("#txt_hari option:contains(\"" +  hari[0] + "\")").attr('value');
+            var hariSplit = hari[1].split("-");
+            $("#txt_hari").val(hariVal);
+
+
+            selectedToko = [];
+            var listToko = JSON.parse($("#toko_" + uid).attr('meta'));
+            listToko.map(function(e) {
+                selectedToko.push({
+                    id: e.toko,
+                    kode: e.kode,
+                    name: e.nama,
+                    alamat: e.alamat,
+                    alamat_provinsi_parse: e.alamat_kecamatan_parse,
+                    alamat_kabupaten_parse: e.alamat_kecamatan_parse,
+                    alamat_kecamatan_parse: e.alamat_kecamatan_parse,
+                    alamat_kelurahan_parse: e.alamat_kelurahan_parse,
+                })
+            });
+
+            accumulateToko();
+
+
+            selectedSales = [];
+            var listSales = JSON.parse($("#sales_" + uid).attr('meta'));
+
+            listSales.map(function(e) {
+                selectedSales.push({
+                    id: e.sales,
+                    name: e.nama
+                })
+            });
+
+            accumulateSales();
+
+
+            $("input[name=txt_no_hari]").each(function () {
+                if(hariSplit.indexOf($(this).attr("value")) >= 0) {
+                    $(this).prop("checked", true);
+                }
+            });
 
             $("#form-tambah").modal("show");
             $("#modal-large-title").html("Edit Rute");
@@ -187,8 +229,7 @@
         $("#btn_tambah_toko").click(function () {
             var tokoID = $("#txt_toko").select2('data');
             if(tokoID[0]) {
-
-                if(!selectedToko.find(o => o.id === tokoID[0].id)) {
+                if(!selectedToko.find(o => parseInt(o.id) === parseInt(tokoID[0].id))) {
                     selectedToko.push({
                         id: tokoID[0].id,
                         kode: tokoID[0].kode,
@@ -335,26 +376,40 @@
 
         });
 
+        accumulateSales();
+
         function accumulateSales(){
             $("#table-sales tbody tr").remove();
             // tableSales.find("TR").remove();
-            selectedSales.map(function(data) {
+            if(selectedSales.length > 0) {
+                selectedSales.map(function(data) {
 
-                var rowTables = document.createElement("TR");
-                var colName = document.createElement("TD");
-                var colAction = document.createElement("TD");
-                var btnDeleteSales = document.createElement("BUTTON");
-                $(btnDeleteSales).addClass("btn btn-danger btn-sm btn-delete-sales").html("<span><i class=\"fa fa-trash\"></i></span>").attr({
-                    "id": "sales-" + data.id
+                    var rowTables = document.createElement("TR");
+                    var colName = document.createElement("TD");
+                    var colAction = document.createElement("TD");
+                    var btnDeleteSales = document.createElement("BUTTON");
+                    $(btnDeleteSales).addClass("btn btn-danger btn-sm btn-delete-sales").html("<span><i class=\"fa fa-trash\"></i></span>").attr({
+                        "id": "sales_" + data.id
+                    });
+                    $(colName).html(data.name);
+                    $(colAction).append(btnDeleteSales);
+                    $(rowTables).append(colName);
+                    $(rowTables).append(colAction);
+
+                    $("#table-sales tbody").append(rowTables);
                 });
-                $(colName).html(data.name);
-                $(colAction).append(btnDeleteSales);
-                $(rowTables).append(colName);
-                $(rowTables).append(colAction);
-
-                $("#table-sales tbody").append(rowTables);
-            });
+            } else {
+                $("#table-sales tbody").append("<tr><td colspan='2'>No Data</td></tr>");
+            }
         }
+
+        $("body").on("click", ".btn-delete-sales", function () {
+            var uid = $(this).attr("id").split("_");
+            uid = uid[uid.length - 1];
+
+            selectedSales = selectedSales.filter(item => item.id != uid);
+            accumulateSales();
+        });
 
 
 

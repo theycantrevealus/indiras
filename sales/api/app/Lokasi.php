@@ -32,8 +32,14 @@ class Lokasi extends Utility {
                 case 'get_all_toko':
                     return self::get_all_toko($parameter);
                     break;
-                case 'get_rute':
-                    return self::get_rute($parameter);
+                case 'get_toko':
+                    return self::select2_get_rute($parameter);
+                    break;
+                case 'get_toko_detail':
+                    return self::get_toko_detail($parameter);
+                    break;
+                case 'search_toko':
+                    return self::search_toko($parameter);
                     break;
                 default:
                     # code...
@@ -64,6 +70,10 @@ class Lokasi extends Utility {
 
             case 'tambah_rute':
                 return self::tambah_rute($parameter);
+                break;
+
+            case 'edit_rute':
+                return self::edit_rute($parameter);
                 break;
 
             default:
@@ -283,6 +293,147 @@ class Lokasi extends Utility {
         return $Toko;
     }
 
+    private function get_toko_detail($parameter)
+    {
+        $params = $parameter[2];
+        $data = self::$query->select('master_toko', array(
+            'kode', 'nama', 'alamat'
+        ))
+            ->where(array(
+                'master_toko.id' => '= ?',
+                'AND',
+                'master_toko.deleted_at' => 'IS NULL'
+            ), array(
+                intval($params)
+            ))
+            ->join('master_wilayah_provinsi',array('nama as alamat_provinsi'))
+            ->join('master_wilayah_kabupaten',array('nama as alamat_kabupaten'))
+            ->join('master_wilayah_kecamatan',array('nama as alamat_kecamatan'))
+            ->join('master_wilayah_kelurahan',array('nama as alamat_kelurahan'))
+            ->on(array(
+                array('master_toko.provinsi', '=', 'master_wilayah_provinsi.id'),
+                array('master_toko.kabupaten', '=', 'master_wilayah_kabupaten.id'),
+                array('master_toko.kecamatan', '=', 'master_wilayah_kecamatan.id'),
+                array('master_toko.kelurahan', '=', 'master_wilayah_kelurahan.id'),
+            ))
+            ->execute();
+        unset($data['response_query']);
+        $data['response_data'] = $data['response_data'][0];
+
+        return $data;
+    }
+
+    private function search_toko($parameter)
+    {
+        $params = $parameter[count($parameter) - 2];
+
+        if(isset($params['params'])) {
+            $paramData = array(
+                'master_toko.nama' => 'ILIKE ' . '\'%' . $params['params'] . '%\''
+            );
+
+            $paramValue = array();
+        } else {
+            $paramData = array(
+                'master_rute.deleted_at' => 'IS NULL',
+            );
+
+            $paramValue = array();
+        }
+
+        $data = self::$query->select('master_toko', array(
+            'id', 'kode', 'nama', 'alamat'
+        ))
+            ->where($paramData, $paramValue)
+            ->join('master_wilayah_provinsi',array('nama as alamat_provinsi'))
+            ->join('master_wilayah_kabupaten',array('nama as alamat_kabupaten'))
+            ->join('master_wilayah_kecamatan',array('nama as alamat_kecamatan'))
+            ->join('master_wilayah_kelurahan',array('nama as alamat_kelurahan'))
+            ->on(array(
+                array('master_toko.provinsi', '=', 'master_wilayah_provinsi.id'),
+                array('master_toko.kabupaten', '=', 'master_wilayah_kabupaten.id'),
+                array('master_toko.kecamatan', '=', 'master_wilayah_kecamatan.id'),
+                array('master_toko.kelurahan', '=', 'master_wilayah_kelurahan.id'),
+            ))
+            ->execute();
+        unset($data['response_query']);
+
+        return $data;
+    }
+
+    private function select2_get_rute($parameter)
+    {
+        $Authorization = new Authorization();
+        $UserData = $Authorization->readBearerToken($parameter['access_token']);
+
+        $params = $parameter[count($parameter) - 2];
+
+        if(isset($params['rute']) && isset($params['params'])) {
+            $paramData = array(
+                'master_rute_detail_toko.rute' => '= ?',
+                'AND',
+                'master_toko.nama' => 'ILIKE ' . '\'%' . $params['params'] . '%\'',
+                'AND',
+                'master_rute.deleted_at' => 'IS NULL',
+            );
+
+            $paramValue = array(
+                $params['rute']
+            );
+        } else {
+            if(isset($params['rute'])) {
+                $paramData = array(
+                    'master_rute_detail_toko.rute' => '= ?',
+                    'AND',
+                    'master_rute.deleted_at' => 'IS NULL',
+                );
+
+                $paramValue = array(
+                    $params['rute']
+                );
+            }
+
+            if(isset($params['params'])) {
+                $paramData = array(
+                    'master_toko.nama' => 'ILIKE ' . '\'%' . $params['params'] . '%\'',
+                    'AND',
+                    'master_rute.deleted_at' => 'IS NULL',
+                );
+
+                $paramValue = array();
+            }
+        }
+
+
+        $data = self::$query->select('master_rute_detail_toko', array(
+            'toko'
+        ))
+            ->join('master_rute',array('id as id_rute', 'nama as nama_rute'))
+            ->join('master_toko',array('id as id_toko', 'nama as nama_toko', 'alamat'))
+            ->join('master_wilayah_provinsi',array('nama as alamat_provinsi'))
+            ->join('master_wilayah_kabupaten',array('nama as alamat_kabupaten'))
+            ->join('master_wilayah_kecamatan',array('nama as alamat_kecamatan'))
+            ->join('master_wilayah_kelurahan',array('nama as alamat_kelurahan'))
+            ->on(array(
+                array('master_rute_detail_toko.rute', '=', 'master_rute.id'),
+                array('master_rute_detail_toko.toko', '=', 'master_toko.id'),
+                array('master_toko.provinsi', '=', 'master_wilayah_provinsi.id'),
+                array('master_toko.kabupaten', '=', 'master_wilayah_kabupaten.id'),
+                array('master_toko.kecamatan', '=', 'master_wilayah_kecamatan.id'),
+                array('master_toko.kelurahan', '=', 'master_wilayah_kelurahan.id'),
+            ))
+            ->order(array(
+                'master_rute.updated_at' => 'DESC'
+            ))
+            ->where($paramData, $paramValue)
+            ->execute();
+
+        unset($data['response_query']);
+
+        return $data;
+
+    }
+
     private function get_rute($parameter) {
         $Authorization = new Authorization();
         $UserData = $Authorization->readBearerToken($parameter['access_token']);
@@ -347,8 +498,12 @@ class Lokasi extends Utility {
             $data['response_data'][$key]['autonum'] = $autonum;
 
             $data['response_data'][$key]['sales'] = self::$query->select('master_rute_detail_sales', array(
-                'id',
+                'sales'
             ))
+                ->join('pegawai', array('nama'))
+                ->on(array(
+                    array('master_rute_detail_sales.sales', '=', 'pegawai.uid'),
+                ))
                 ->where(array(
                     'master_rute_detail_sales.rute' => '= ?'
                 ),
@@ -357,8 +512,30 @@ class Lokasi extends Utility {
                 ->execute()['response_data'];
 
             $data['response_data'][$key]['toko'] = self::$query->select('master_rute_detail_toko', array(
-                'id',
+                'toko',
             ))
+                ->join('master_toko', array(
+                    'nama', 'kode', 'alamat'
+                ))
+                ->join('master_wilayah_provinsi', array(
+                    'nama as alamat_provinsi_parse'
+                ))
+                ->join('master_wilayah_kabupaten', array(
+                    'nama as alamat_kabupaten_parse'
+                ))
+                ->join('master_wilayah_kecamatan', array(
+                    'nama as alamat_kecamatan_parse'
+                ))
+                ->join('master_wilayah_kelurahan', array(
+                    'nama as alamat_kelurahan_parse'
+                ))
+                ->on(array(
+                    array('master_rute_detail_toko.toko', '=', 'master_toko.id'),
+                    array('master_toko.provinsi', '=', 'master_wilayah_provinsi.id'),
+                    array('master_toko.kabupaten', '=', 'master_wilayah_kabupaten.id'),
+                    array('master_toko.kecamatan', '=', 'master_wilayah_kecamatan.id'),
+                    array('master_toko.kelurahan', '=', 'master_wilayah_kelurahan.id')
+                ))
                 ->where(array(
                     'master_rute_detail_toko.rute' => '= ?'
                 ),
@@ -446,6 +623,7 @@ class Lokasi extends Utility {
                         'updated_at'=>parent::format_date()
                     )
                 )
+                ->returning('uid')
                 ->execute();
 
             if ($bed['response_result'] > 0){
@@ -461,7 +639,7 @@ class Lokasi extends Utility {
                             'login_id'
                         ),
                         'value'=>array(
-                            $uid,
+                            $bed['response_unique'],
                             $UserData['data']->uid,
                             $table,
                             'I',
@@ -476,6 +654,100 @@ class Lokasi extends Utility {
 
             return $bed;
         }
+    }
+
+    function edit_rute($parameter) {
+        $Authorization = new Authorization();
+        $UserData = $Authorization->readBearerToken($parameter['access_token']);
+
+        $day = array('Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu');
+        $updateRute = self::$query->update('master_rute', array(
+            'nama'=> $day[intval($parameter['hari']) - 1] . ' ' . $parameter['week_no'],
+            'hari'=>intval($parameter['hari']),
+            'week_no'=>$parameter['week_no'],
+            'updated_at'=>parent::format_date(),
+        ))
+            ->where(array(
+                'master_rute.deleted_at' => 'IS NULL',
+                'AND',
+                'master_rute.id' => '= ?'
+            ),
+                array(
+                    $parameter['id']
+                )
+            )
+            ->execute();
+
+        if($updateRute['response_result'] > 0) {
+            $resetSales = self::$query
+                ->hard_delete('master_rute_detail_sales')
+                ->where(array(
+                    'master_rute_detail_sales.rute' => '= ?'
+                ), array(
+                        intval($parameter['id'])
+                    )
+                )
+                ->execute();
+
+            foreach ($parameter['sales'] as $key => $value) {
+                $saveSales = self::$query
+                    ->insert('master_rute_detail_sales', array(
+                            'sales'=> $value['id'],
+                            'rute' => $parameter['id'],
+                        )
+                    )
+                    ->execute();
+                array_push($salesData, $saveSales);
+            }
+
+
+            $resetToko = self::$query
+                ->hard_delete('master_rute_detail_toko')
+                ->where(array(
+                    'master_rute_detail_toko.rute' => '= ?'
+                ), array(
+                        intval($parameter['id'])
+                    )
+                )
+                ->execute();
+
+            foreach ($parameter['toko'] as $key => $value) {
+                $saveToko = self::$query
+                    ->insert('master_rute_detail_toko', array(
+                            'toko'=> intval($value['id']),
+                            'rute' => $parameter['id'],
+                        )
+                    )
+                    ->execute();
+                array_push($tokoData, $saveToko);
+            }
+
+            $log = parent::log(array(
+                    'type'=>'activity',
+                    'column'=>array(
+                        'unique_target',
+                        'user_uid',
+                        'table_name',
+                        'action',
+                        'logged_at',
+                        'status',
+                        'login_id'
+                    ),
+                    'value'=>array(
+                        $parameter['id'],
+                        $UserData['data']->uid,
+                        'master_rute',
+                        'U',
+                        parent::format_date(),
+                        'N',
+                        $UserData['data']->log_id
+                    ),
+                    'class'=>__CLASS__
+                )
+            );
+        }
+
+        return $updateRute;
     }
 
     private function tambah_rute($parameter) {
