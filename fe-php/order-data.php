@@ -140,7 +140,7 @@
 
 <script>
 
-  let apiUrl = "./sample_data/order-data.json";
+  let apiUrl = "<?=  $API_URL[$APP_ENV] . $API_ENDPOINT[$APP_ENV]['toko_list'] ?>";
 
   $("#btnSearch").click(function() {
     $("#modal-search").modal("show");
@@ -156,22 +156,23 @@
 
   $(`#customer-rute`).select2({
     dropdownParent: $("#modal-search"),
-    placeholder: "Pilih rute...",
+    placeholder: "Pilih rute...", 
     ajax: {
-      url: "./sample_data/order-rute-search.json",
+      url: "<?=  $API_URL[$APP_ENV] . $API_ENDPOINT[$APP_ENV]['rute_select'] ?>",
       dataType: "json",
       delay: 250,
       data: function (params) {
         return {
-          q: params.term, // search term
+          params: params.term, // search term
           page: params.page,
         };
       },
-      processResults: function (data, params) {
+      processResults: function (response, params) {
+        const result = parseResponse(response);
         params.page = params.page || 1;
 
         return {
-          results: data.items,
+          results: result.response_data,
           pagination: params.page,
         };
       },
@@ -187,8 +188,10 @@
       url: apiUrl + `?rute=${rute}&params=${params}`,
       dataType: "JSON",
       success: function (response) {
+        let parseData = parseResponse(response);
+
         let html = "";
-        response.data.forEach(function(item) {
+        parseData.response_data.forEach(function(item) {
           html += `
               <a href="order-customer-divisi.php?customer_id=${item.id}" class="btn btn-rounded btn-outline-info d-flex w-100 d-block text-primary p-3">
                  <div class="col-md-12 text-start">
@@ -208,7 +211,7 @@
            `;
         });
         
-        if (response.data.length == 0) {
+        if (parseData.response_value == 0) {
           html = "Data tidak ditemukan";
         }
 

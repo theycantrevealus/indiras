@@ -163,7 +163,7 @@ $customerId = isset($_GET['customer_id']) ? $_GET['customer_id'] : null;
       url: apiUrl,
       dataType: "JSON",
       success: function (response) {
-        $("#toko-nama").text(response.nama);
+        $("#toko-nama").text(response.data.nama);
       }
     });
   }

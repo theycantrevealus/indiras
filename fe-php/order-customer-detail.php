@@ -402,7 +402,7 @@ $customerId = isset($_GET['customer_id']) ? $_GET['customer_id'] : "";
         delay: 250,
         data: function (params) {
           return {
-            q: params.term, // search term
+            params: params.term, // search term
             page: params.page,
           };
         },
@@ -410,7 +410,7 @@ $customerId = isset($_GET['customer_id']) ? $_GET['customer_id'] : "";
           params.page = params.page || 1;
 
           return {
-            results: data.items,
+            results: data.data,
             pagination: params.page,
           };
         },
@@ -431,9 +431,9 @@ $customerId = isset($_GET['customer_id']) ? $_GET['customer_id'] : "";
       url: apiUrl + `?customer_id=${customerId}`,
       dataType: "JSON",
       success: function (response) {
-        $("#customer-name").val(response.nama);
-        $("#customer-alamat").val(response.alamat);
-        $("#customer-rute").val(response.rute);
+        $("#customer-name").val(response.data.nama);
+        $("#customer-alamat").val(response.data.alamat);
+        $("#customer-rute").val(response.data.rute);
       }
     });
   }
@@ -455,9 +455,9 @@ $customerId = isset($_GET['customer_id']) ? $_GET['customer_id'] : "";
         response.data.forEach(function(item) {
           html += `
             <div class="col-md-4 mb-2">
-              <button class="btn btn-rounded btn-outline-info d-flex w-100 d-block text-primary p-2 tambah-item-detail" data-item-id="${item.id}" data-item-name="${item.name}" data-satuan-besar="${item.satuan_besar}" data-satuan-tengah="${item.satuan_tengah}">
+              <button class="btn btn-rounded btn-outline-info d-flex w-100 d-block text-primary p-2 tambah-item-detail" data-item-id="${item.id}" data-item-name="${item.nama}" data-satuan-besar="${item.satuan_besar}" data-satuan-tengah="${item.satuan_tengah}">
                  <div class="col-md-12 text-start">
-                    <h4 class="card-title mb-1 text-dark">${item.name}</h4>
+                    <h4 class="card-title mb-1 text-dark">${item.nama}</h4>
                     <table>
                       <tbody>
                         <tr>
@@ -692,6 +692,7 @@ $customerId = isset($_GET['customer_id']) ? $_GET['customer_id'] : "";
       const payload = {
         customer_id: customerId,
         divisi_id: `<?= $_GET['divisi_id'] ?>`,
+        metode_bayar: $(`#customer-payment-method`).val(),
         order_list: orderItemsAll,
       };
 

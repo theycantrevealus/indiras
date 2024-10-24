@@ -15,16 +15,10 @@
 
   <script>
 
-    function ajaxLoader(selector, action) {
-    	var $class = "ajax-loader";
-    
-    	$html = '<div class="'+$class+'"><div></div><div></div><div></div><div></div></div>';
-    
-    	if(action == "show") {
-    		$($html).insertBefore(selector);
-    	} else if(action == "hide") {
-    		$("."+$class).hide();
-    	}  
+    function parseResponse(jsonData) {
+      return {
+        ...jsonData.response_package 
+      }
     }
 
   </script>
