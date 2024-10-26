@@ -41,6 +41,9 @@ class Lokasi extends Utility {
                 case 'search_toko':
                     return self::search_toko($parameter);
                     break;
+                case 'get_rute':
+                    return self::search_rute($parameter);
+                    break;
                 default:
                     # code...
                     break;
@@ -319,7 +322,6 @@ class Lokasi extends Utility {
             ->execute();
         unset($data['response_query']);
         $data['response_data'] = $data['response_data'][0];
-
         return $data;
     }
 
@@ -329,7 +331,9 @@ class Lokasi extends Utility {
 
         if(isset($params['params'])) {
             $paramData = array(
-                'master_toko.nama' => 'ILIKE ' . '\'%' . $params['params'] . '%\''
+                'master_toko.nama' => 'ILIKE ' . '\'%' . $params['params'] . '%\'',
+                'AND',
+                'master_rute.deleted_at' => 'IS NULL'
             );
 
             $paramValue = array();
@@ -355,6 +359,36 @@ class Lokasi extends Utility {
                 array('master_toko.kecamatan', '=', 'master_wilayah_kecamatan.id'),
                 array('master_toko.kelurahan', '=', 'master_wilayah_kelurahan.id'),
             ))
+            ->execute();
+        unset($data['response_query']);
+
+        return $data;
+    }
+
+    private function search_rute($parameter)
+    {
+        $params = $parameter[count($parameter) - 2];
+
+        if(isset($params['params'])) {
+            $paramData = array(
+                'master_rute.nama' => 'ILIKE ' . '\'%' . $params['params'] . '%\'',
+                'AND',
+                'master_rute.deleted_at' => 'IS NULL',
+            );
+
+            $paramValue = array();
+        } else {
+            $paramData = array(
+                'master_rute.deleted_at' => 'IS NULL',
+            );
+
+            $paramValue = array();
+        }
+
+        $data = self::$query->select('master_rute', array(
+            'id', 'nama as text',
+        ))
+            ->where($paramData, $paramValue)
             ->execute();
         unset($data['response_query']);
 
@@ -409,7 +443,7 @@ class Lokasi extends Utility {
             'toko'
         ))
             ->join('master_rute',array('id as id_rute', 'nama as nama_rute'))
-            ->join('master_toko',array('id as id_toko', 'nama as nama_toko', 'alamat'))
+            ->join('master_toko',array('id as id_toko', 'nama as nama_toko', 'alamat', 'nama as text'))
             ->join('master_wilayah_provinsi',array('nama as alamat_provinsi'))
             ->join('master_wilayah_kabupaten',array('nama as alamat_kabupaten'))
             ->join('master_wilayah_kecamatan',array('nama as alamat_kecamatan'))
