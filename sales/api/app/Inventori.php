@@ -9229,47 +9229,81 @@ class Inventori extends Utility
     $proceed_data = array();
     $satuan_kecil = array();
 
-    // $hapusUlangInv = self::$query->delete('master_inv')
-    //     ->execute();
-
-//    $kandungan_resep = self::$query->delete('master_inv_obat_kandungan')
-//      ->execute();
-
     foreach ($parameter['data_import'] as $key => $value) {
 
 
         $itemSatuanMeta = [];
-
-        //Proses satuan kecil
-//        $satuanKecil = explode(':', $value['kecil']);
         $namaSatuan = trim($value['kecil']);
-        $ratioSatuan = $value['kecil_ratio'];
+        $ratioSatuan = floatval($value['kecil_ratio']);
 
-        $satuan_check = self::$query->select('master_inv_satuan', array(
-            'uid',
-            'deleted_at'
-        ))
-            ->where(array(
-                'master_inv_satuan.nama' => '= ?'
-            ), array(
-                strtoupper($namaSatuan)
+        if($ratioSatuan > 0 && $namaSatuan !== '') {
+            $satuan_check = self::$query->select('master_inv_satuan', array(
+                'uid',
+                'deleted_at'
             ))
-            ->limit(1)
-            ->execute();
-
-        if (count($satuan_check['response_data']) > 0) {
-            $targetSatuan = $satuan_check['response_data'][0]['uid'];
-            foreach ($satuan_check['response_data'] as $SatuanKey => $SatuanValue) {
-                $activateSatuan = self::$query->update('master_inv_satuan', array(
-                    'deleted_at' => NULL
+                ->where(array(
+                    'master_inv_satuan.nama' => '= ?'
+                ), array(
+                    strtoupper($namaSatuan)
                 ))
-                    ->where(array(
-                        'master_inv_satuan.uid' => '= ?'
-                    ), array(
-                        $SatuanValue['uid']
+                ->limit(1)
+                ->execute();
+
+            if (count($satuan_check['response_data']) > 0) {
+                $targetSatuan = $satuan_check['response_data'][0]['uid'];
+                foreach ($satuan_check['response_data'] as $SatuanKey => $SatuanValue) {
+                    $activateSatuan = self::$query->update('master_inv_satuan', array(
+                        'deleted_at' => NULL
                     ))
+                        ->where(array(
+                            'master_inv_satuan.uid' => '= ?'
+                        ), array(
+                            $SatuanValue['uid']
+                        ))
+                        ->execute();
+                    if ($activateSatuan['response_result'] > 0) {
+                        $log = parent::log(array(
+                            'type' => 'activity',
+                            'column' => array(
+                                'unique_target',
+                                'user_uid',
+                                'table_name',
+                                'action',
+                                'new_value',
+                                'logged_at',
+                                'status',
+                                'login_id'
+                            ),
+                            'value' => array(
+                                $SatuanValue['uid'],
+                                $UserData['data']->uid,
+                                'master_inv_satuan',
+                                'U',
+                                'aktifkan kembali',
+                                parent::format_date(),
+                                'N',
+                                $UserData['data']->log_id
+                            ),
+                            'class' => __CLASS__
+                        ));
+                    }
+                }
+
+
+
+            } else {
+
+
+                $targetSatuan = parent::gen_uuid();
+                // Satuan Baru
+                $new_satuan = self::$query->insert('master_inv_satuan', array(
+                    'uid' => $targetSatuan,
+                    'nama' => strtoupper($namaSatuan),
+                    'created_at' => parent::format_date(),
+                    'updated_at' => parent::format_date()
+                ))
                     ->execute();
-                if ($activateSatuan['response_result'] > 0) {
+                if ($new_satuan['response_result'] > 0) {
                     $log = parent::log(array(
                         'type' => 'activity',
                         'column' => array(
@@ -9277,17 +9311,15 @@ class Inventori extends Utility
                             'user_uid',
                             'table_name',
                             'action',
-                            'new_value',
                             'logged_at',
                             'status',
                             'login_id'
                         ),
                         'value' => array(
-                            $SatuanValue['uid'],
+                            $targetSatuan,
                             $UserData['data']->uid,
                             'master_inv_satuan',
-                            'U',
-                            'aktifkan kembali',
+                            'I',
                             parent::format_date(),
                             'N',
                             $UserData['data']->log_id
@@ -9295,91 +9327,89 @@ class Inventori extends Utility
                         'class' => __CLASS__
                     ));
                 }
+
+
             }
 
-
-
-        } else {
-
-
-            $targetSatuan = parent::gen_uuid();
-            // Satuan Baru
-            $new_satuan = self::$query->insert('master_inv_satuan', array(
-                'uid' => $targetSatuan,
-                'nama' => strtoupper($namaSatuan),
-                'created_at' => parent::format_date(),
-                'updated_at' => parent::format_date()
-            ))
-                ->execute();
-            if ($new_satuan['response_result'] > 0) {
-                $log = parent::log(array(
-                    'type' => 'activity',
-                    'column' => array(
-                        'unique_target',
-                        'user_uid',
-                        'table_name',
-                        'action',
-                        'logged_at',
-                        'status',
-                        'login_id'
-                    ),
-                    'value' => array(
-                        $targetSatuan,
-                        $UserData['data']->uid,
-                        'master_inv_satuan',
-                        'I',
-                        parent::format_date(),
-                        'N',
-                        $UserData['data']->log_id
-                    ),
-                    'class' => __CLASS__
-                ));
-            }
-
-
+            array_push($itemSatuanMeta, array(
+                'satuan' => $targetSatuan,
+                'type' => 'kecil',
+                'ratio' => $ratioSatuan,
+                'allow_sell' => intval($value['allow_sell_kecil'])
+            ));
         }
 
-        array_push($itemSatuanMeta, array(
-            'satuan' => $targetSatuan,
-            'type' => 'kecil',
-            'ratio' => $ratioSatuan,
-            'allow_sell' => intval($value['allow_sell_kecil'])
-        ));
-
-
-
-
-
-        //Proses satuan tengah
-//        $satuanTengah = explode(':', $value['tengah']);
         $namaSatuan = $value['tengah'];
-        $ratioSatuan = $value['tengah_ratio'];
+        $ratioSatuan = floatval($value['tengah_ratio']);
 
-        $satuan_check = self::$query->select('master_inv_satuan', array(
-            'uid',
-            'deleted_at'
-        ))
-            ->where(array(
-                'master_inv_satuan.nama' => '= ?'
-            ), array(
-                strtoupper($namaSatuan)
+        if($ratioSatuan > 0 && $namaSatuan !== '') {
+            $satuan_check = self::$query->select('master_inv_satuan', array(
+                'uid',
+                'deleted_at'
             ))
-            ->limit(1)
-            ->execute();
-
-        if (count($satuan_check['response_data']) > 0) {
-            $targetSatuan = $satuan_check['response_data'][0]['uid'];
-            foreach ($satuan_check['response_data'] as $SatuanKey => $SatuanValue) {
-                $activateSatuan = self::$query->update('master_inv_satuan', array(
-                    'deleted_at' => NULL
+                ->where(array(
+                    'master_inv_satuan.nama' => '= ?'
+                ), array(
+                    strtoupper($namaSatuan)
                 ))
-                    ->where(array(
-                        'master_inv_satuan.uid' => '= ?'
-                    ), array(
-                        $SatuanValue['uid']
+                ->limit(1)
+                ->execute();
+
+            if (count($satuan_check['response_data']) > 0) {
+                $targetSatuan = $satuan_check['response_data'][0]['uid'];
+                foreach ($satuan_check['response_data'] as $SatuanKey => $SatuanValue) {
+                    $activateSatuan = self::$query->update('master_inv_satuan', array(
+                        'deleted_at' => NULL
                     ))
+                        ->where(array(
+                            'master_inv_satuan.uid' => '= ?'
+                        ), array(
+                            $SatuanValue['uid']
+                        ))
+                        ->execute();
+                    if ($activateSatuan['response_result'] > 0) {
+                        $log = parent::log(array(
+                            'type' => 'activity',
+                            'column' => array(
+                                'unique_target',
+                                'user_uid',
+                                'table_name',
+                                'action',
+                                'new_value',
+                                'logged_at',
+                                'status',
+                                'login_id'
+                            ),
+                            'value' => array(
+                                $SatuanValue['uid'],
+                                $UserData['data']->uid,
+                                'master_inv_satuan',
+                                'U',
+                                'aktifkan kembali',
+                                parent::format_date(),
+                                'N',
+                                $UserData['data']->log_id
+                            ),
+                            'class' => __CLASS__
+                        ));
+                    }
+                }
+
+
+
+            } else {
+
+
+                $targetSatuan = parent::gen_uuid();
+                // Satuan Baru
+                $new_satuan = self::$query->insert('master_inv_satuan', array(
+                    'uid' => $targetSatuan,
+                    'nama' => strtoupper($namaSatuan),
+                    'created_at' => parent::format_date(),
+                    'updated_at' => parent::format_date()
+                ))
                     ->execute();
-                if ($activateSatuan['response_result'] > 0) {
+                if ($new_satuan['response_result'] > 0) {
                     $log = parent::log(array(
                         'type' => 'activity',
                         'column' => array(
@@ -9387,17 +9417,15 @@ class Inventori extends Utility
                             'user_uid',
                             'table_name',
                             'action',
-                            'new_value',
                             'logged_at',
                             'status',
                             'login_id'
                         ),
                         'value' => array(
-                            $SatuanValue['uid'],
+                            $targetSatuan,
                             $UserData['data']->uid,
                             'master_inv_satuan',
-                            'U',
-                            'aktifkan kembali',
+                            'I',
                             parent::format_date(),
                             'N',
                             $UserData['data']->log_id
@@ -9405,92 +9433,89 @@ class Inventori extends Utility
                         'class' => __CLASS__
                     ));
                 }
+
+
             }
 
-
-
-        } else {
-
-
-            $targetSatuan = parent::gen_uuid();
-            // Satuan Baru
-            $new_satuan = self::$query->insert('master_inv_satuan', array(
-                'uid' => $targetSatuan,
-                'nama' => strtoupper($namaSatuan),
-                'created_at' => parent::format_date(),
-                'updated_at' => parent::format_date()
-            ))
-                ->execute();
-            if ($new_satuan['response_result'] > 0) {
-                $log = parent::log(array(
-                    'type' => 'activity',
-                    'column' => array(
-                        'unique_target',
-                        'user_uid',
-                        'table_name',
-                        'action',
-                        'logged_at',
-                        'status',
-                        'login_id'
-                    ),
-                    'value' => array(
-                        $targetSatuan,
-                        $UserData['data']->uid,
-                        'master_inv_satuan',
-                        'I',
-                        parent::format_date(),
-                        'N',
-                        $UserData['data']->log_id
-                    ),
-                    'class' => __CLASS__
-                ));
-            }
-
-
+            array_push($itemSatuanMeta, array(
+                'satuan' => $targetSatuan,
+                'type' => 'tengah',
+                'ratio' => $ratioSatuan,
+                'allow_sell' => intval($value['allow_sell_tengah'])
+            ));
         }
 
-        array_push($itemSatuanMeta, array(
-            'satuan' => $targetSatuan,
-            'type' => 'tengah',
-            'ratio' => $ratioSatuan,
-            'allow_sell' => intval($value['allow_sell_tengah'])
-        ));
-
-
-
-
-
-
-        //Proses satuan besar
-//        $satuanBesar = $value['besar'];
         $namaSatuan = $value['besar'];
         $ratioSatuan = $value['besar_ratio'];
 
-        $satuan_check = self::$query->select('master_inv_satuan', array(
-            'uid',
-            'deleted_at'
-        ))
-            ->where(array(
-                'master_inv_satuan.nama' => '= ?'
-            ), array(
-                strtoupper($namaSatuan)
+        if($ratioSatuan > 0 && $namaSatuan !== '') {
+            $satuan_check = self::$query->select('master_inv_satuan', array(
+                'uid',
+                'deleted_at'
             ))
-            ->limit(1)
-            ->execute();
-
-        if (count($satuan_check['response_data']) > 0) {
-            $targetSatuan = $satuan_check['response_data'][0]['uid'];
-            foreach ($satuan_check['response_data'] as $SatuanKey => $SatuanValue) {
-                $activateSatuan = self::$query->update('master_inv_satuan', array(
-                    'deleted_at' => NULL
+                ->where(array(
+                    'master_inv_satuan.nama' => '= ?'
+                ), array(
+                    strtoupper($namaSatuan)
                 ))
-                    ->where(array(
-                        'master_inv_satuan.uid' => '= ?'
-                    ), array(
-                        $SatuanValue['uid']
+                ->limit(1)
+                ->execute();
+
+            if (count($satuan_check['response_data']) > 0) {
+                $targetSatuan = $satuan_check['response_data'][0]['uid'];
+                foreach ($satuan_check['response_data'] as $SatuanKey => $SatuanValue) {
+                    $activateSatuan = self::$query->update('master_inv_satuan', array(
+                        'deleted_at' => NULL
                     ))
+                        ->where(array(
+                            'master_inv_satuan.uid' => '= ?'
+                        ), array(
+                            $SatuanValue['uid']
+                        ))
+                        ->execute();
+                    if ($activateSatuan['response_result'] > 0) {
+                        $log = parent::log(array(
+                            'type' => 'activity',
+                            'column' => array(
+                                'unique_target',
+                                'user_uid',
+                                'table_name',
+                                'action',
+                                'new_value',
+                                'logged_at',
+                                'status',
+                                'login_id'
+                            ),
+                            'value' => array(
+                                $SatuanValue['uid'],
+                                $UserData['data']->uid,
+                                'master_inv_satuan',
+                                'U',
+                                'aktifkan kembali',
+                                parent::format_date(),
+                                'N',
+                                $UserData['data']->log_id
+                            ),
+                            'class' => __CLASS__
+                        ));
+                    }
+                }
+
+
+
+            } else {
+
+
+                $targetSatuan = parent::gen_uuid();
+                // Satuan Baru
+                $new_satuan = self::$query->insert('master_inv_satuan', array(
+                    'uid' => $targetSatuan,
+                    'nama' => strtoupper($namaSatuan),
+                    'created_at' => parent::format_date(),
+                    'updated_at' => parent::format_date()
+                ))
                     ->execute();
-                if ($activateSatuan['response_result'] > 0) {
+                if ($new_satuan['response_result'] > 0) {
                     $log = parent::log(array(
                         'type' => 'activity',
                         'column' => array(
@@ -9498,17 +9523,15 @@ class Inventori extends Utility
                             'user_uid',
                             'table_name',
                             'action',
-                            'new_value',
                             'logged_at',
                             'status',
                             'login_id'
                         ),
                         'value' => array(
-                            $SatuanValue['uid'],
+                            $targetSatuan,
                             $UserData['data']->uid,
                             'master_inv_satuan',
-                            'U',
-                            'aktifkan kembali',
+                            'I',
                             parent::format_date(),
                             'N',
                             $UserData['data']->log_id
@@ -9516,56 +9539,17 @@ class Inventori extends Utility
                         'class' => __CLASS__
                     ));
                 }
+
+
             }
 
-
-
-        } else {
-
-
-            $targetSatuan = parent::gen_uuid();
-            // Satuan Baru
-            $new_satuan = self::$query->insert('master_inv_satuan', array(
-                'uid' => $targetSatuan,
-                'nama' => strtoupper($namaSatuan),
-                'created_at' => parent::format_date(),
-                'updated_at' => parent::format_date()
-            ))
-                ->execute();
-            if ($new_satuan['response_result'] > 0) {
-                $log = parent::log(array(
-                    'type' => 'activity',
-                    'column' => array(
-                        'unique_target',
-                        'user_uid',
-                        'table_name',
-                        'action',
-                        'logged_at',
-                        'status',
-                        'login_id'
-                    ),
-                    'value' => array(
-                        $targetSatuan,
-                        $UserData['data']->uid,
-                        'master_inv_satuan',
-                        'I',
-                        parent::format_date(),
-                        'N',
-                        $UserData['data']->log_id
-                    ),
-                    'class' => __CLASS__
-                ));
-            }
-
-
+            array_push($itemSatuanMeta, array(
+                'satuan' => $targetSatuan,
+                'type' => 'besar',
+                'ratio' => $ratioSatuan,
+                'allow_sell' => intval($value['allow_sell_besar'])
+            ));
         }
-
-        array_push($itemSatuanMeta, array(
-            'satuan' => $targetSatuan,
-            'type' => 'besar',
-            'ratio' => $ratioSatuan,
-            'allow_sell' => intval($value['allow_sell_besar'])
-        ));
 
 
 
@@ -9663,195 +9647,196 @@ class Inventori extends Utility
 
 
 
-
-
-
-        //Check Ketersediaan Supplier
-        $supplier_check = self::$query->select('master_inv_supplier', array(
-            'uid',
-            'deleted_at'
-        ))
-            ->where(array(
-                'master_inv_supplier.nama' => '= ?'
-            ), array(
-                strtoupper($value['brand'])
-            ))
-            ->limit(1)
-            ->execute();
-        if (count($supplier_check['response_data']) > 0) {
-            $targetSupplier = $supplier_check['response_data'][0]['uid'];
-            foreach ($supplier_check['response_data'] as $SupKey => $SupValue) {
-                if ($SupValue['deleted_at'] != '') {
-                    $activateSup = self::$query->update('master_inv_supplier', array(
-                        'deleted_at' => NULL
-                    ))
-                        ->where(array(
-                            'master_inv_supplier.uid' => '= ?'
-                        ), array(
-                            $SupValue['uid']
-                        ))
-                        ->execute();
-                    if ($activateSup['response_result'] > 0) {
-                        $log = parent::log(array(
-                            'type' => 'activity',
-                            'column' => array(
-                                'unique_target',
-                                'user_uid',
-                                'table_name',
-                                'action',
-                                'new_value',
-                                'logged_at',
-                                'status',
-                                'login_id'
-                            ),
-                            'value' => array(
-                                $SupValue['uid'],
-                                $UserData['data']->uid,
-                                'master_inv_supplier',
-                                'U',
-                                'aktifkan kembali',
-                                parent::format_date(),
-                                'N',
-                                $UserData['data']->log_id
-                            ),
-                            'class' => __CLASS__
-                        ));
-                    }
-                }
-            }
-        } else {
-            $targetSupplier = parent::gen_uuid();
-            $new_supplier = self::$query->insert('master_inv_supplier', array(
-                'uid' => $targetSupplier,
-                'kode' => '',
-                'nama' => strtoupper($value['brand']),
-                'created_at' => parent::format_date(),
-                'updated_at' => parent::format_date()
-            ))
-                ->execute();
-            if ($new_supplier['response_result'] > 0) {
-                $log = parent::log(array(
-                    'type' => 'activity',
-                    'column' => array(
-                        'unique_target',
-                        'user_uid',
-                        'table_name',
-                        'action',
-                        'logged_at',
-                        'status',
-                        'login_id'
-                    ),
-                    'value' => array(
-                        $targetSupplier,
-                        $UserData['data']->uid,
-                        'master_inv_supplier',
-                        'I',
-                        parent::format_date(),
-                        'N',
-                        $UserData['data']->log_id
-                    ),
-                    'class' => __CLASS__
-                ));
-            }
-        }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      //Check duplicate
-      $check = self::$query->select('master_inv', array(
-        'uid',
-        'nama',
-        'deleted_at'
-      ))
-        ->where(array(
-            'master_inv.nama' => '= ?',
-            'AND',
-            'master_inv.kode_barang' => '= ?'
-        ), array(
-          trim($value['nama']),
-            trim($value['code'])
-        ))
-        ->execute();
-      if (count($check['response_data']) > 0) {
-        foreach ($check['response_data'] as $CheckKey => $CheckValue) {
-            $targetItem = $CheckValue['uid'];
-          $ReActivate = self::$query->update('master_inv', array(
-              'supplier' => $targetSupplier,
-              'kategori' => $targetKategori,
-              'updated_at' => parent::format_date(),
-              'deleted_at' => NULL
+      if(trim($value['brand']) !== '') {
+          $supplier_check = self::$query->select('master_inv_supplier', array(
+              'uid',
+              'deleted_at'
           ))
-            ->where(array(
-              'master_inv.uid' => '= ?'
-            ), array(
-              $CheckValue['uid']
-            ))
-            ->execute();
-
-          if (!empty($CheckValue['deleted_at'])) {
-            array_push($non_active, $CheckValue);
+              ->where(array(
+                  'master_inv_supplier.nama' => '= ?'
+              ), array(
+                  strtoupper(trim($value['brand']))
+              ))
+              ->limit(1)
+              ->execute();
+          if (count($supplier_check['response_data']) > 0) {
+              $targetSupplier = $supplier_check['response_data'][0]['uid'];
+              foreach ($supplier_check['response_data'] as $SupKey => $SupValue) {
+                  if ($SupValue['deleted_at'] != '') {
+                      $activateSup = self::$query->update('master_inv_supplier', array(
+                          'deleted_at' => NULL
+                      ))
+                          ->where(array(
+                              'master_inv_supplier.uid' => '= ?'
+                          ), array(
+                              $SupValue['uid']
+                          ))
+                          ->execute();
+                      if ($activateSup['response_result'] > 0) {
+                          $log = parent::log(array(
+                              'type' => 'activity',
+                              'column' => array(
+                                  'unique_target',
+                                  'user_uid',
+                                  'table_name',
+                                  'action',
+                                  'new_value',
+                                  'logged_at',
+                                  'status',
+                                  'login_id'
+                              ),
+                              'value' => array(
+                                  $SupValue['uid'],
+                                  $UserData['data']->uid,
+                                  'master_inv_supplier',
+                                  'U',
+                                  'aktifkan kembali',
+                                  parent::format_date(),
+                                  'N',
+                                  $UserData['data']->log_id
+                              ),
+                              'class' => __CLASS__
+                          ));
+                      }
+                  }
+              }
           } else {
-            array_push($duplicate_row, $CheckValue);
+              $targetSupplier = parent::gen_uuid();
+              $new_supplier = self::$query->insert('master_inv_supplier', array(
+                  'uid' => $targetSupplier,
+                  'kode' => '',
+                  'nama' => strtoupper(trim($value['brand'])),
+                  'created_at' => parent::format_date(),
+                  'updated_at' => parent::format_date()
+              ))
+                  ->execute();
+              if ($new_supplier['response_result'] > 0) {
+                  $log = parent::log(array(
+                      'type' => 'activity',
+                      'column' => array(
+                          'unique_target',
+                          'user_uid',
+                          'table_name',
+                          'action',
+                          'logged_at',
+                          'status',
+                          'login_id'
+                      ),
+                      'value' => array(
+                          $targetSupplier,
+                          $UserData['data']->uid,
+                          'master_inv_supplier',
+                          'I',
+                          parent::format_date(),
+                          'N',
+                          $UserData['data']->log_id
+                      ),
+                      'class' => __CLASS__
+                  ));
+              }
           }
-        }
-      } else { //Item Unik
-        $newItemUID = parent::gen_uuid();
-        $targetItem = $newItemUID;
-        $newItem = self::$query->insert('master_inv', array(
-          'uid' => $newItemUID,
-          'nama' => strtoupper(trim($value['nama'])),
-          'supplier' => $targetSupplier,
-          'kode_barang' => $value['code'],
-          'kategori' => $targetKategori,
-          'created_at' => parent::format_date(),
-          'updated_at' => parent::format_date()
-        ))
-          ->execute();
-        if ($newItem['response_result'] > 0) {
-          array_push($proceed_data, $newItem);
-        } else {
-          $value['process'] = $newItem;
-          array_push($failed_data, $value);
-        }
-
-        if ($newItem['response_result'] > 0) {
-          $log = parent::log(array(
-            'type' => 'activity',
-            'column' => array(
-              'unique_target',
-              'user_uid',
-              'table_name',
-              'action',
-              'logged_at',
-              'status',
-              'login_id'
-            ),
-            'value' => array(
-              $newItemUID,
-              $UserData['data']->uid,
-              'master_inv',
-              'I',
-              parent::format_date(),
-              'N',
-              $UserData['data']->log_id
-            ),
-            'class' => __CLASS__
-          ));
-
-          $success_proceed += 1;
-        }
       }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      if(trim($value['code']) !== '' && trim($value['nama'])) {
+          //Check duplicate
+          $check = self::$query->select('master_inv', array(
+              'uid',
+              'nama',
+              'deleted_at'
+          ))
+              ->where(array(
+                  'master_inv.nama' => '= ?',
+                  'AND',
+                  'master_inv.kode_barang' => '= ?'
+              ), array(
+                  strtoupper(trim($value['nama'])),
+                  trim($value['code'])
+              ))
+              ->execute();
+          if (count($check['response_data']) > 0) {
+              foreach ($check['response_data'] as $CheckKey => $CheckValue) {
+                  $targetItem = $CheckValue['uid'];
+                  $ReActivate = self::$query->update('master_inv', array(
+                      'supplier' => $targetSupplier,
+                      'kategori' => $targetKategori,
+                      'updated_at' => parent::format_date(),
+                      'deleted_at' => NULL
+                  ))
+                      ->where(array(
+                          'master_inv.uid' => '= ?'
+                      ), array(
+                          $CheckValue['uid']
+                      ))
+                      ->execute();
+
+                  if (!empty($CheckValue['deleted_at'])) {
+                      array_push($non_active, $CheckValue);
+                  } else {
+                      array_push($duplicate_row, $CheckValue);
+                  }
+              }
+          } else { //Item Unik
+              $newItemUID = parent::gen_uuid();
+              $targetItem = $newItemUID;
+              $newItem = self::$query->insert('master_inv', array(
+                  'uid' => $newItemUID,
+                  'nama' => strtoupper(trim($value['nama'])),
+                  'supplier' => $targetSupplier,
+                  'kode_barang' => trim($value['code']),
+                  'kategori' => $targetKategori,
+                  'created_at' => parent::format_date(),
+                  'updated_at' => parent::format_date()
+              ))
+                  ->execute();
+              if ($newItem['response_result'] > 0) {
+                  array_push($proceed_data, $newItem);
+              } else {
+                  $value['process'] = $newItem;
+                  array_push($failed_data, $value);
+              }
+
+              if ($newItem['response_result'] > 0) {
+                  $log = parent::log(array(
+                      'type' => 'activity',
+                      'column' => array(
+                          'unique_target',
+                          'user_uid',
+                          'table_name',
+                          'action',
+                          'logged_at',
+                          'status',
+                          'login_id'
+                      ),
+                      'value' => array(
+                          $newItemUID,
+                          $UserData['data']->uid,
+                          'master_inv',
+                          'I',
+                          parent::format_date(),
+                          'N',
+                          $UserData['data']->log_id
+                      ),
+                      'class' => __CLASS__
+                  ));
+
+                  $success_proceed += 1;
+              }
+          }
+      }
+
 
 
       // Prosess konversi satuan

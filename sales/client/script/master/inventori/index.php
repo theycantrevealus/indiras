@@ -100,21 +100,21 @@
               "data": null,
               render: function(data, type, row, meta) {
                   var meta = row["satuan"].reduce((a, v) => ({ ...a, [v["type"]]: v}), {});
-                  return "<center><h5 class=\"" +  (meta["besar"]?.allow_sell > 0 ? "text-success" : "text-danger") + "\">" + meta["besar"]?.nilai + "</h5>" + meta["besar"]?.nama + "</center>";
+                  return "<center><h5 class=\"" +  (meta["besar"]?.allow_sell > 0 ? "text-success" : "text-danger") + "\">" + (meta["besar"]?.nilai ?? '-') + "</h5>" + (meta["besar"]?.nama ?? '-') + "</center>";
               }
           },
           {
               "data": null,
               render: function(data, type, row, meta) {
                   var meta = row["satuan"].reduce((a, v) => ({ ...a, [v["type"]]: v}), {});
-                  return "<center><h5 class=\"" +  (meta["tengah"]?.allow_sell > 0 ? "text-success" : "text-danger") + "\">" + meta["tengah"]?.nilai + "</h5>" + meta["tengah"]?.nama + "</center>";
+                  return "<center><h5 class=\"" +  (meta["tengah"]?.allow_sell > 0 ? "text-success" : "text-danger") + "\">" + (meta["tengah"]?.nilai ?? '-') + "</h5>" + (meta["tengah"]?.nama ?? '-') + "</center>";
               }
           },
           {
               "data": null,
               render: function(data, type, row, meta) {
                   var meta = row["satuan"].reduce((a, v) => ({ ...a, [v["type"]]: v}), {});
-                  return "<center><h5 class=\"" +  (meta["kecil"]?.allow_sell > 0 ? "text-success" : "text-danger") + "\">" + meta["kecil"]?.nilai + "</h5>" + meta["kecil"]?.nama + "</center>";
+                  return "<center><h5 class=\"" +  (meta["kecil"]?.allow_sell > 0 ? "text-success" : "text-danger") + "\">" + (meta["kecil"]?.nilai ?? '-') + "</h5>" + (meta["kecil"]?.nama ?? '-') + "</center>";
               }
           },
         {
