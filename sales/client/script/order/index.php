@@ -267,7 +267,7 @@
                 success:function(response) {
                     const status = ['Baru', 'Pending', 'Cancel', 'Done'];
                     const status_color = ['info', 'warning', 'danger', 'success'];
-                    const metode_bayar = ['COD', 'Cicil 7 Hari', 'Cicil 14 Hari'];
+                    const metode_bayar = ['', 'COD', 'Cicil 7 Hari', 'Cicil 14 Hari'];
                     data = response.response_package;
                     console.log(data);
                     $("#order_no").text(data.kode).addClass("text-info");
@@ -279,19 +279,49 @@
                     $("#order_sales").text(data.sales_nama);
                     $("#order_rute").text(data.rute_nama);
                     $("#order_metode").text(metode_bayar[parseInt(data.metode_bayar)]);
-                    $("#order_cancel").text(data.pegawai_cancel ?? '-');
-                    $("#order_pending").text(data.pegawai_pending ?? '-');
-                    $("#order_done").text(data.pegawai_done ?? '-');
+                    $("#order_cancel").text(data.pegawai_cancel?.nama ?? '-');
+                    $("#order_pending").text(data.pegawai_pending?.nama ?? '-');
+                    $("#order_done").text(data.pegawai_done?.nama ?? '-');
 
                     $("#order_detail tbody tr").remove();
+                    const parsedItem = {};
+
                     for(const a in data.detail) {
+                        if(!parsedItem[data.detail[a].item]) {
+                            parsedItem[data.detail[a].item] = {
+                                nama_barang: data.detail[a].nama_barang,
+                                satuan_besar: "",
+                                satuan_tengah: "",
+                                satuan_kecil: "",
+                                jlh_besar: 0,
+                                jlh_tengah: 0,
+                                jlh_kecil: 0,
+                            }
+                        }
+
+                        parsedItem[data.detail[a].item][`satuan_${data.detail[a].type}`] = data.detail[a].nama_satuan;
+                        parsedItem[data.detail[a].item][`jlh_${data.detail[a].type}`] += parseFloat(data.detail[a].qty);
+                    }
+
+                    console.log(parsedItem);
+
+                    for(const a in parsedItem) {
                         $("#order_detail tbody").append("<tr>" +
-                            "<td>" + data.detail[a].nama_barang + "</td>" +
-                            "<td>" + data.detail[a].qty + "</td>" +
-                            "<td>" + data.detail[a].nama_satuan + "</td>" +
-                            "<td>" + data.detail[a].type.toUpperCase() + "</td>" +
+                            "<td>" + parsedItem[a].nama_barang + "</td>" +
+                            "<td class='wrap_content'>" + parsedItem[a].jlh_besar + " " + parsedItem[a].satuan_besar + "</td>" +
+                            "<td class='wrap_content'>" + parsedItem[a].jlh_tengah + " " + parsedItem[a].satuan_tengah + "</td>" +
+                            "<td class='wrap_content'>" + parsedItem[a].jlh_kecil + " " + parsedItem[a].satuan_kecil + "</td>" +
                             "</tr>");
                     }
+
+                    // for(const a in data.detail) {
+                    //     $("#order_detail tbody").append("<tr>" +
+                    //         "<td>" + data.detail[a].nama_barang + "</td>" +
+                    //         "<td>" + data.detail[a].qty + "</td>" +
+                    //         "<td>" + data.detail[a].nama_satuan + "</td>" +
+                    //         "<td>" + data.detail[a].type.toUpperCase() + "</td>" +
+                    //         "</tr>");
+                    // }
 
                     if(parseInt(data.status) === 0) { // New
                         $("#btn_done").show();
@@ -524,9 +554,9 @@
                                             <thead class="thead-dark">
                                                 <tr>
                                                     <th>Item</th>
-                                                    <th class="wrap_content">Qty</th>
-                                                    <th class="wrap_content">Satuan</th>
-                                                    <th>Type</th>
+                                                    <th class="wrap_content">Besar</th>
+                                                    <th class="wrap_content">Tengah</th>
+                                                    <th class="wrap_content">Kecil</th>
                                                 </tr>
                                             </thead>
                                             <tbody></tbody>

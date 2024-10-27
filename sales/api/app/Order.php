@@ -140,7 +140,8 @@ class Order extends Utility {
                         'pegawai.uid' => '= ?'
                     ), array(
                         $value['pegawai_cancel']
-                    ))['response_data'][0];
+                    ))
+                    ->execute()['response_data'][0];
             }
 
             if($value['pegawai_pending'] !== null) {
@@ -151,7 +152,8 @@ class Order extends Utility {
                         'pegawai.uid' => '= ?'
                     ), array(
                         $value['pegawai_pending']
-                    ))['response_data'][0];
+                    ))
+                    ->execute()['response_data'][0];
             }
 
             if($value['pegawai_done'] !== null) {
@@ -162,7 +164,8 @@ class Order extends Utility {
                         'pegawai.uid' => '= ?'
                     ), array(
                         $value['pegawai_done']
-                    ))['response_data'][0];
+                    ))
+                    ->execute()['response_data'][0];
             }
 
             $data['response_data'][$key]['tanggal'] = Utility::dateToIndo($value['tanggal']);
