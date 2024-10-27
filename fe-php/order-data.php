@@ -161,6 +161,9 @@
       url: "<?=  $API_URL[$APP_ENV] . $API_ENDPOINT[$APP_ENV]['rute_select'] ?>",
       dataType: "json",
       delay: 250,
+      beforeSend: function(request) {
+        request.setRequestHeader("Authorization", `Bearer ${salesData.token}`); <?php //salesData can check at auth_check.php ?>
+      },
       data: function (params) {
         return {
           params: params.term, // search term
@@ -169,6 +172,7 @@
       },
       processResults: function (response, params) {
         const result = parseResponse(response);
+        console.log(result);
         params.page = params.page || 1;
 
         return {
@@ -177,29 +181,39 @@
         };
       },
     },
-    minimumInputLength: 1
+    // minimumInputLength: 1
   });
 
   refreshToko();
 
   function refreshToko(rute = "", params = "") { 
+    const ruteData = $("#customer-rute").select2('data');
+
+    if (rute != "") {
+      rute = `&rute=${rute}`;
+    }
+
     $.ajax({
       type: "GET",
-      url: apiUrl + `?rute=${rute}&params=${params}`,
+      url: apiUrl + `?params=${params}`,
       dataType: "JSON",
+      beforeSend: function(request) {
+        request.setRequestHeader("Authorization", `Bearer ${salesData.token}`); <?php //salesData can check at auth_check.php ?>
+      },
       success: function (response) {
         let parseData = parseResponse(response);
+        console.log
 
         let html = "";
         parseData.response_data.forEach(function(item) {
           html += `
-              <a href="order-customer-divisi.php?customer_id=${item.id}" class="btn btn-rounded btn-outline-info d-flex w-100 d-block text-primary p-3">
+              <a href="order-customer-divisi.php?customer_id=${item.id_toko}&rute=${item.nama_rute}&rute_id=${item.id_rute}" class="btn btn-rounded btn-outline-info d-flex w-100 d-block text-primary p-3">
                  <div class="col-md-12 text-start">
-                    <h4 class="card-title mb-1 text-dark">${item.nama}</h4>
+                    <h4 class="card-title mb-1 text-dark">${item.nama_toko}</h4>
                     <hr />
                     <div>
                       <span class="fs-2 d-flex align-items-center text-dark">
-                        <i class="ti ti-send text-primary fs-3 me-1"></i> ${item.rute}
+                        <i class="ti ti-send text-primary fs-3 me-1"></i> ${item.nama_rute}
                       </span>
                       <span class="fs-2 d-flex align-items-center text-dark">
                         <i class="ti ti-map-pin text-danger fs-3 me-1"></i> ${item.alamat}

@@ -8,8 +8,8 @@
 
   salesData = JSON.parse(salesData);
   $(document).ready(function () {
-    $("#pegawai_nama").html(salesData.kode);
-    $("#pegawai_jabatan").html(salesData.jabatan);
+    $("#pegawai_nama").html(salesData.nama);
+    // $("#pegawai_jabatan").html(salesData.jabatan);
   })
   
 </script>

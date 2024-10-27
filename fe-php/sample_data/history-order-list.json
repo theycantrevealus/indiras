@@ -1,0 +1,39 @@
+{
+  "token": "",
+  "response_package": {
+    "response_result": 1,
+    "response_value": 3,
+    "response_data":  [
+      {
+        "id": 3,
+        "tanggal": "10 Okt 2024",
+        "rute": "Rute 123",
+        "toko": "UD Semangat Marbun",
+        "divisi": "Perfetti Van Melle",
+        "jumlah_item": "3",
+        "metode_bayar": "0 - 7 hari",
+        "img_url": "-"
+      },
+      {
+        "id": 2,
+        "tanggal": "10 Okt 2024",
+        "rute": "Rute 123",
+        "toko": "UD Semangat Marbun",
+        "divisi": "Dolpin",
+        "jumlah_item": "5",
+        "metode_bayar": "0 - 7 hari",
+        "img_url": "-"
+      },
+      {
+        "id": 1,
+        "tanggal": "09 Okt 2024",
+        "rute": "Rute 123",
+        "toko": "UD Sehat Sejahtera",
+        "divisi": "Perfetti Van Melle",
+        "jumlah_item": "3",
+        "metode_bayar": "7 - 14 hari",
+        "img_url": "-"
+      }
+    ]
+  }
+}

@@ -4,6 +4,8 @@
 <?php 
 
 $customerId = isset($_GET['customer_id']) ? $_GET['customer_id'] : null; 
+$rute = isset($_GET['rute']) ? $_GET['rute'] : null;
+$ruteId = isset($_GET['rute_id']) ? $_GET['rute_id'] : null;  
 
 ?>
 
@@ -140,8 +142,6 @@ $customerId = isset($_GET['customer_id']) ? $_GET['customer_id'] : null;
 
 <script>
 
-  let apiUrl = "./sample_data/order-data-divisi-all.json";
-
   $("#btnSearch").click(function() {
     $("#modal-search").modal("show");
   });
@@ -156,14 +156,18 @@ $customerId = isset($_GET['customer_id']) ? $_GET['customer_id'] : null;
   if (`<?= $customerId ?>` == "") {
     $("#toko-nama").text("Belum dipilih");
   } else {
-    const apiUrl = `./sample_data/customer-search-by-id.json`; // ?customer_id=`<?= $customerId ?>`;
+    const apiUrl = "<?=  $API_URL[$APP_ENV] . $API_ENDPOINT[$APP_ENV]['toko_detail'] ?>";
 
     $.ajax({
       type: "GET",
-      url: apiUrl,
+      url: apiUrl + `/<?= $customerId ?>`,
       dataType: "JSON",
+      beforeSend: function(request) {
+        request.setRequestHeader("Authorization", `Bearer ${salesData.token}`); <?php //salesData can check at auth_check.php ?>
+      },
       success: function (response) {
-        $("#toko-nama").text(response.data.nama);
+        const parseData = parseResponse(response);
+        $("#toko-nama").text(parseData.response_data.nama);
       }
     });
   }
@@ -171,16 +175,23 @@ $customerId = isset($_GET['customer_id']) ? $_GET['customer_id'] : null;
   refreshDivisi();
 
   function refreshDivisi(params = "") { 
+    let apiUrl = "<?=  $API_URL[$APP_ENV] . $API_ENDPOINT[$APP_ENV]['supplier_list'] ?>";
+
     $.ajax({
       type: "GET",
       url: apiUrl + `?params=${params}`,
       dataType: "JSON",
+      beforeSend: function(request) {
+        request.setRequestHeader("Authorization", `Bearer ${salesData.token}`); <?php //salesData can check at auth_check.php ?>
+      },
       success: function (response) {
-        let html = "";
-        response.data.forEach(function(item) {
+        let parseData = parseResponse(response);
+
+        let html = ""; 
+        parseData.response_data.forEach(function(item) {
           html += `
             <div class="col-md-4 mb-3">
-              <a href="order-customer-detail.php?divisi_id=${item.id}&customer_id=<?= $customerId ?>" class="btn btn-rounded btn-outline-warning d-flex w-100 d-block text-primary p-3">
+              <a href="order-customer-detail.php?divisi_id=${item.id ?? item.uid}&customer_id=<?= $customerId ?>&rute=<?= $rute ?>&rute_id=<?= $ruteId ?>" class="btn btn-rounded btn-outline-warning d-flex w-100 d-block text-primary p-3">
                  <div class="col-md-12 text-start">
                     <h4 class="card-title mb-1 text-dark">${item.nama}</h4>
                   </div>   
@@ -189,7 +200,7 @@ $customerId = isset($_GET['customer_id']) ? $_GET['customer_id'] : null;
            `;
         });
         
-        if (response.data.length == 0) {
+        if (parseData.response_data.length == 0) {
           html = "Data tidak ditemukan";
         }
 

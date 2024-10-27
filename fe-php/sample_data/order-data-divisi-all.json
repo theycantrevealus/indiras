@@ -1,76 +1,38 @@
 {
-  "status": "success",
-  "draw": 1,
-  "recordsTotal": 4,
-  "recordsFiltered": 4,
-  "data": [
-    {
-      "id": 1,
-      "nama": "Dolpin"
-    },
-    {
-      "id": 2,
-      "nama": "Perfetti Van Melle"
-    },
-    {
-      "id": 3,
-      "nama": "Kino"
-    },
-    {
-      "id": 5,
-      "nama": "Livi"
-    },
-    {
-      "id": 5,
-      "nama": "Livi"
-    },
-    {
-      "id": 5,
-      "nama": "Livi"
-    },
-    {
-      "id": 5,
-      "nama": "Livi"
-    },
-    {
-      "id": 5,
-      "nama": "Livi"
-    },
-    {
-      "id": 5,
-      "nama": "Livi"
-    },
-    {
-      "id": 5,
-      "nama": "Livi"
-    },
-    {
-      "id": 5,
-      "nama": "Livi"
-    },
-    {
-      "id": 5,
-      "nama": "Livi"
-    },
-    {
-      "id": 5,
-      "nama": "Livi"
-    },
-    {
-      "id": 5,
-      "nama": "Livi"
-    },
-    {
-      "id": 5,
-      "nama": "Livi"
-    },
-    {
-      "id": 5,
-      "nama": "Livi"
-    },
-    {
-      "id": 5,
-      "nama": "Livi"
-    }
-  ]
+  "token": "",
+  "response_package": {
+    "response_result": 1,
+    "response_value": 5,
+    "response_data":  [
+      {
+        "id": 1,
+        "nama": "Dolpin",
+        "img_url": "-"
+      },
+      {
+        "id": 2,
+        "nama": "Perfetti Van Melle",
+        "img_url": "-"
+      },
+      {
+        "id": 3,
+        "nama": "Dolpin",
+        "img_url": "-"
+      },
+      {
+        "id": 4,
+        "nama": "Kino",
+        "img_url": "-"
+      },
+      {
+        "id": 5,
+        "nama": "Livi",
+        "img_url": "-"
+      },
+      {
+        "id": 5,
+        "nama": "Livi"
+      }
+    ]
+  }
 }

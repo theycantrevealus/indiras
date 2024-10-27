@@ -1,9 +1,13 @@
 {
-  "status": "success",
-  "data": {
-    "id": 1,
-    "nama": "UD Semangat Marbun", 
-    "rute": "Rute 3456",
-    "alamat": "Jl. Jamin Ginting No. 12"
+  "token": "",
+  "response_package": {
+    "response_result": 1,
+    "response_value": 1,
+    "response_data":  {
+      "id": 1,
+      "nama": "UD Semangat Marbun", 
+      "rute": "Rute 3456",
+      "alamat": "Jl. Jamin Ginting No. 12"
+    }
   }
 }

@@ -3,7 +3,9 @@
 
 <?php 
 
-$customerId = isset($_GET['customer_id']) ? $_GET['customer_id'] : ""; 
+$customerId = isset($_GET['customer_id']) ? $_GET['customer_id'] : "";
+$rute = isset($_GET['rute']) ? $_GET['rute'] : "";
+$ruteId = isset($_GET['rute_id']) ? $_GET['rute_id'] : "";
 
 ?>
 
@@ -70,6 +72,8 @@ $customerId = isset($_GET['customer_id']) ? $_GET['customer_id'] : "";
             <div class="card-body">
               <!-- <h4 class="card-title mb-3">Data Customer</h4> -->
               <form>
+                <input hidden id="customer-id" value="<?= $customerId ?>" />
+                <input hidden id="rute-id" value="<?= $ruteId ?>" />
                 <div class="row">
                   <div class="col-md-12">
                     <div class="col-md-6 mb-3 row">
@@ -86,7 +90,6 @@ $customerId = isset($_GET['customer_id']) ? $_GET['customer_id'] : "";
                       <div class="col-md-10">
                         <?php 
                           if ($customerId) {
-                            echo '<input hidden class="form-control" type="text" id="customer-id" disabled>';
                             echo '<input class="form-control" type="text" id="customer-name" disabled>';
                           } else {
                             echo '<select class="form-control" id="customer-name"></select>';
@@ -98,7 +101,7 @@ $customerId = isset($_GET['customer_id']) ? $_GET['customer_id'] : "";
                       <div class="col-md-12 mb-2 row">
                         <label for="customer-name" class="col-md-2 col-form-label">Rute</label>
                         <div class="col-md-4">
-                          <input class="form-control" type="text" id="customer-rute" disabled>
+                          <input class="form-control" type="text" id="customer-rute" disabled value="<?= $rute ?>">
                         </div>
                       </div>
                     </div>
@@ -115,7 +118,12 @@ $customerId = isset($_GET['customer_id']) ? $_GET['customer_id'] : "";
                       <div class="col-md-12 mb-3 row">
                         <label for="customer-alamat" class="col-md-2 col-form-label">Metode Bayar</label>
                         <div class="col-md-4">
-                          <select class="form-control" id="customer-payment-method"></select>
+                          <select class="form-control" id="customer-payment-method">
+                            <option value="" selected>Pilih pembayaran...</option>
+                            <option value="1">C.O.D</option>
+                            <option value="2">0 - 7 Hari</option>
+                            <option value="3">7 - 14 Hari</option>
+                          </select>
                         </div>
                       </div>
                     </div>
@@ -243,17 +251,6 @@ $customerId = isset($_GET['customer_id']) ? $_GET['customer_id'] : "";
           <div class="col-md-12 row" id="list-order-pick">
 
           </div>
-          <!-- <table id="order-item-pick-table" class="table w-100 table-sm table-bordered display text-nowrap">
-            <thead>
-              <tr>
-                <th width="40%">Item</th>
-                <th>Satuan<br /> Besar</th>
-                <th>Satuan<br /> Tengah</th>
-              </tr>
-            </thead>
-            <tbody>
-            </tbody>
-          </table> -->
         </div>
       </div>
       <!-- /.modal-content -->
@@ -287,6 +284,7 @@ $customerId = isset($_GET['customer_id']) ? $_GET['customer_id'] : "";
                 <input class="form-control" type="number" id="konfirm-satuan-besar" aria-describedby="caption-konfirm-satuan-besar">
                 <span class="input-group-text" id="caption-konfirm-satuan-besar"></span>
               </div>
+              <input hidden type="text" id="konfirm-satuan-besar-id">
             </div>
           </div>
           <div class="col-md-12">
@@ -296,6 +294,7 @@ $customerId = isset($_GET['customer_id']) ? $_GET['customer_id'] : "";
                 <input class="form-control" type="number" id="konfirm-satuan-tengah" aria-describedby="caption-konfirm-satuan-tengah">
                 <span class="input-group-text" id="caption-konfirm-satuan-tengah"></span>
               </div>
+              <input hidden type="text" id="konfirm-satuan-tengah-id">
             </div>
           </div>
         </div>
@@ -333,6 +332,7 @@ $customerId = isset($_GET['customer_id']) ? $_GET['customer_id'] : "";
             <div class="col-md-12 mb-2 row">
               <label for="konfirm-satuan-besar" class="col-md-2 col-form-label">Satuan Besar</label>
               <div class="col-md-12 input-group">
+                <input hidden type="text" id="konfirm-satuan-besar-edit-id">
                 <input class="form-control" type="number" id="konfirm-satuan-besar-edit" aria-describedby="caption-konfirm-satuan-besar">
                 <span class="input-group-text" id="caption-konfirm-satuan-besar-edit"></span>
               </div>
@@ -342,6 +342,7 @@ $customerId = isset($_GET['customer_id']) ? $_GET['customer_id'] : "";
             <div class="col-md-12 mb-3 row">
               <label for="konfirm-satuan-tengah" class="col-md-2 col-form-label">Satuan Tengah</label>
               <div class="col-md-12 input-group">
+                <input hidden type="text" id="konfirm-satuan-tengah-edit-id">
                 <input class="form-control" type="number" id="konfirm-satuan-tengah-edit" aria-describedby="caption-konfirm-satuan-tengah">
                 <span class="input-group-text" id="caption-konfirm-satuan-tengah-edit"></span>
               </div>
@@ -376,7 +377,7 @@ $customerId = isset($_GET['customer_id']) ? $_GET['customer_id'] : "";
 
 <script>
 
-  $("#sales-id").val(salesData.kode);
+  $("#sales-id").val(salesData.nama);
 
   const apiUrl = "./sample_data/order-item-list.json";
   const orderItem = localStorage.getItem(`order_item_cust_` + `<?= $customerId ?>`);
@@ -389,17 +390,23 @@ $customerId = isset($_GET['customer_id']) ? $_GET['customer_id'] : "";
   }
 
   let customerId = `<?= $customerId ?>`;
+  let ruteId = `<?= $ruteId ?>`;
 
   /**
    * GET CUSTOMER
    */
   if (customerId == "") {
+    const apiUrl = "<?=  $API_URL[$APP_ENV] . $API_ENDPOINT[$APP_ENV]['toko_search'] ?>";
+
     $(`#customer-name`).select2({
       placeholder: "Pilih toko...",
       ajax: {
-        url: "./sample_data/customer-search.json",
+        url: apiUrl,
         dataType: "json",
         delay: 250,
+        beforeSend: function(request) {
+          request.setRequestHeader("Authorization", `Bearer ${salesData.token}`); <?php //salesData can check at auth_check.php ?>
+        },
         data: function (params) {
           return {
             params: params.term, // search term
@@ -407,10 +414,11 @@ $customerId = isset($_GET['customer_id']) ? $_GET['customer_id'] : "";
           };
         },
         processResults: function (data, params) {
+          const parseData = parseResponse(data);
           params.page = params.page || 1;
 
           return {
-            results: data.data,
+            results: parseData.response_data,
             pagination: params.page,
           };
         },
@@ -420,20 +428,27 @@ $customerId = isset($_GET['customer_id']) ? $_GET['customer_id'] : "";
 
     $('#customer-name').on('select2:select', function (e) {
       const dataRes = e.params.data;
+      console.log(dataRes);
       $("#customer-alamat").val(dataRes.alamat);
-      $("#customer-rute").val(dataRes.rute);
+      $("#customer-rute").val(dataRes.nama_rute);
+      $("#customer-id").val(dataRes.id);
     });
   } else {
-    const apiUrl = `./sample_data/customer-search-by-id.json`;
+    const apiUrl = "<?= $API_URL[$APP_ENV] . $API_ENDPOINT[$APP_ENV]['toko_detail'] ?>";
 
     $.ajax({
       type: "GET",
-      url: apiUrl + `?customer_id=${customerId}`,
+      url: apiUrl + `/${customerId}`,
       dataType: "JSON",
+      beforeSend: function(request) {
+        request.setRequestHeader("Authorization", `Bearer ${salesData.token}`); <?php //salesData can check at auth_check.php ?>
+      },
       success: function (response) {
-        $("#customer-name").val(response.data.nama);
-        $("#customer-alamat").val(response.data.alamat);
-        $("#customer-rute").val(response.data.rute);
+        const parseData = parseResponse(response);
+
+        $("#customer-name").val(parseData.response_data.nama);
+        $("#customer-alamat").val(parseData.response_data.alamat);
+        // $("#customer-rute").val(parseData.response_data.rute);
       }
     });
   }
@@ -445,17 +460,22 @@ $customerId = isset($_GET['customer_id']) ? $_GET['customer_id'] : "";
   $("#tambah-item").click(function() {
     $("#modal-tambah-item").modal("show");
 
-    const apiSearch = `./sample_data/order-item-list.json`;
+    const apiSearch = `<?= $API_URL[$APP_ENV] . $API_ENDPOINT[$APP_ENV]['supplier_item_list'] ?>`;
     $.ajax({
       type: "GET",
       url: apiSearch,
       dataType: "JSON",
+      beforeSend: function(request) {
+          request.setRequestHeader("Authorization", `Bearer ${salesData.token}`); <?php //salesData can check at auth_check.php ?>
+        },
       success: function (response) {
+        const parseData = parseResponse(response);
+
         let html = "";
-        response.data.forEach(function(item) {
+        parseData.response_data.forEach(function(item) {
           html += `
             <div class="col-md-4 mb-2">
-              <button class="btn btn-rounded btn-outline-info d-flex w-100 d-block text-primary p-2 tambah-item-detail" data-item-id="${item.id}" data-item-name="${item.nama}" data-satuan-besar="${item.satuan_besar}" data-satuan-tengah="${item.satuan_tengah}">
+              <button class="btn btn-rounded btn-outline-info d-flex w-100 d-block text-primary p-2 tambah-item-detail" data-item-id="${item.id ?? item.uid}" data-item-name="${item.nama}" data-satuan-besar="${item.satuan_besar.nama}" data-satuan-tengah="${item.satuan_tengah.nama}" data-satuan-besar-id="${item.satuan_besar.id}" data-satuan-tengah-id="${item.satuan_tengah.id}">
                  <div class="col-md-12 text-start">
                     <h4 class="card-title mb-1 text-dark">${item.nama}</h4>
                     <table>
@@ -468,7 +488,7 @@ $customerId = isset($_GET['customer_id']) ? $_GET['customer_id'] : "";
                           </td>
                           <td>
                             <span class="fs-2 d-flex align-items-center text-dark">
-                              : &nbsp; <b> ${item.satuan_besar} </b>
+                              : &nbsp; <b> ${item.satuan_besar.nama} </b>
                             </span>
                           </td>
                         </tr>
@@ -480,7 +500,7 @@ $customerId = isset($_GET['customer_id']) ? $_GET['customer_id'] : "";
                           </td>
                           <td>
                             <span class="fs-2 d-flex align-items-center text-dark">
-                              : &nbsp; <b> ${item.satuan_tengah} </b>
+                              : &nbsp; <b> ${item.satuan_tengah.nama} </b>
                             </span>
                           </td>
                         </tr>
@@ -500,6 +520,8 @@ $customerId = isset($_GET['customer_id']) ? $_GET['customer_id'] : "";
   $("#list-order-pick").on('click', '.tambah-item-detail', function() {
     const namaItem = $(this).data("item-name");
     const satuanBesar = $(this).data("satuan-besar");
+    const satuanBesarId = $(this).data("satuan-besar-id");
+    const satuanTengahId = $(this).data("satuan-tengah-id");
     const satuanTengah = $(this).data("satuan-tengah");
     const itemId = $(this).data("item-id");
 
@@ -515,7 +537,9 @@ $customerId = isset($_GET['customer_id']) ? $_GET['customer_id'] : "";
     }
 
     $("#konfirm-satuan-besar").val("");
-    $("#konfirm-satuan-tengah").val("");
+    $("#konfirm-satuan-tengah").val("")  
+    $("#konfirm-satuan-besar-id").val(satuanBesarId);
+    $("#konfirm-satuan-tengah-id").val(satuanTengahId);
     $("#konfirm-nama-item").val(namaItem);
     $("#caption-konfirm-satuan-besar").html(satuanBesar);
     $("#caption-konfirm-satuan-tengah").html(satuanTengah);
@@ -525,25 +549,25 @@ $customerId = isset($_GET['customer_id']) ? $_GET['customer_id'] : "";
 
   $(`#customer-payment-method`).select2({
     placeholder: "Pilih pembayaran...",
-    ajax: {
-      url: "./sample_data/payment-method-search.json",
-      dataType: "json",
-      delay: 250,
-      data: function (params) {
-        return {
-          q: params.term, // search term
-          page: params.page,
-        };
-      },
-      processResults: function (data, params) {
-        params.page = params.page || 1;
+    // ajax: {
+    //   url: "./sample_data/payment-method-search.json",
+    //   dataType: "json",
+    //   delay: 250,
+    //   data: function (params) {
+    //     return {
+    //       q: params.term, // search term
+    //       page: params.page,
+    //     };
+    //   },
+    //   processResults: function (data, params) {
+    //     params.page = params.page || 1;
 
-        return {
-          results: data.items,
-          pagination: params.page,
-        };
-      },
-    },
+    //     return {
+    //       results: data.items,
+    //       pagination: params.page,
+    //     };
+    //   },
+    // },
   });
 
   $("#order-item-table tbody").on('click', '.delete-order', function() {
@@ -565,6 +589,8 @@ $customerId = isset($_GET['customer_id']) ? $_GET['customer_id'] : "";
   $("#btnSubmitKonfirm").click(function() {
     const itemId = $("#id-konfirm-item").val();
     let satuanBesar = $("#konfirm-satuan-besar").val();
+    let satuanBesarId = $("#konfirm-satuan-besar-id").val();
+    let satuanTengahId = $("#konfirm-satuan-tengah-id").val();
     let satuanTengah = $("#konfirm-satuan-tengah").val();
     const namaItem = $("#konfirm-nama-item").val();
     const satuanBesarName = $("#caption-konfirm-satuan-besar").text();
@@ -596,13 +622,17 @@ $customerId = isset($_GET['customer_id']) ? $_GET['customer_id'] : "";
     orderItemsId.push(itemId);
     orderItemsAll.push({
       id: itemId,
-      nama: namaItem, 
+      item: itemId,
+      nama: namaItem,
+      id_satuan_besar: satuanBesarId,
+      id_satuan_tengah: satuanTengahId,
       satuan_besar: satuanBesarName,
       satuan_tengah: satuanTengahName,
       jlh_satuan_besar: satuanBesar,
       jlh_satuan_tengah: satuanTengah,
       text_satuan_besar: `${satuanBesar} ${satuanBesarName}`,
       text_satuan_tengah: `${satuanTengah} ${satuanTengahName}`,
+      remark: "-",
     });
 
     $("#modal-tambah-item-konfirm").modal("hide");
@@ -621,7 +651,7 @@ $customerId = isset($_GET['customer_id']) ? $_GET['customer_id'] : "";
   $("#btnSubmit").click(function() {
 
     let metodeBayar = $("#customer-payment-method").select2('data');
-    if (metodeBayar.length == 0) {
+    if (metodeBayar[0].id == "") {
       Swal.fire(
         "Perhatian!",
         'Pilih metode bayar lebih dahulu...',
@@ -651,17 +681,17 @@ $customerId = isset($_GET['customer_id']) ? $_GET['customer_id'] : "";
         return false;
       }
 
-      $("#confirm_toko").html(toko[0].text);
-      $("#confirm_rute").html(toko[0].rute);
+      $("#confirm_toko").html(toko[0].nama_toko);
+      $("#confirm_rute").html(toko[0].nama_rute);
       $("#confirm_alamat").html(toko[0].alamat);
       $("#confirm_pembayaran").html(metodeBayar[0].text);
+      $("#customer-id").val(toko[0].id);
+      $("#rute-id").val(toko[0].id_rute);
     } else {
       $("#confirm_toko").html($("#customer-name").val());
       $("#confirm_rute").html($("#customer-rute").val());
       $("#confirm_alamat").html($("#customer-alamat").val());
     }
-
-    customerId = $("#customer-name").val();
 
     let html = "";
     orderItemsAll.forEach(function(item) {
@@ -685,24 +715,38 @@ $customerId = isset($_GET['customer_id']) ? $_GET['customer_id'] : "";
   });
 
   $("#btnSubmitPesanan").click(function() {
-    const apiPost = './sample_data/submit-order-success.json'; 
+    const apiPost = "<?= $API_URL[$APP_ENV] . $API_ENDPOINT[$APP_ENV]['order'] ?>";
     $(this).html(`<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Mohon tunggu...`);
 
+    const customerId = $("#customer-id").val();
+    const ruteId = $("#rute-id").val();
+    
     setTimeout(function() {
       const payload = {
-        customer_id: customerId,
-        divisi_id: `<?= $_GET['divisi_id'] ?>`,
+        request: "tambah_order",
+        toko: customerId,
+        rute: ruteId,
+        divisi: `<?= $_GET['divisi_id'] ?>`,
         metode_bayar: $(`#customer-payment-method`).val(),
-        order_list: orderItemsAll,
+        sales: salesData.id ?? salesData.uid,
+        detail: orderItemsAll,
+        remark: "-",
       };
+
+      console.log(payload);
 
       $.ajax({
         type: "POST",
         url: apiPost,
         data: payload,
-        dataType: "JSON", 
+        dataType: "JSON",
+        beforeSend: function(request) {
+          request.setRequestHeader("Authorization", `Bearer ${salesData.token}`); <?php //salesData can check at auth_check.php ?>
+        },
         success: function (response) {
-          if (response.status == 'success') {
+          const parseData = parseResponse(response);
+
+          if (parseData.response_result == 1) {
             $("#modal-confirm").modal("hide");
             
             Swal.fire({
@@ -724,7 +768,7 @@ $customerId = isset($_GET['customer_id']) ? $_GET['customer_id'] : "";
               }
             }); 
             
-          } else {
+          } else {  
             Swal.fire(
               "Gagal!",
               'Gagal membuat pesanan...',
@@ -828,10 +872,10 @@ $customerId = isset($_GET['customer_id']) ? $_GET['customer_id'] : "";
 
   function reloadItem() {
     let html = "";
-    orderItemsAll.forEach(function(item) {
+    orderItemsAll.forEach(function(item) { 
       html += `
         <div class="col-md-4 mb-2">
-          <button onClick="popUpEdit(this.id)" id="item-id-${item.id}" type="button" class="btn btn-rounded btn-outline-success d-flex w-100 d-block text-primary p-2 order-tambah-item-detail">
+          <button onClick="popUpEdit(this.id)" id="item-id-${item.id ?? item.uid}" type="button" class="btn btn-rounded btn-outline-success d-flex w-100 d-block text-primary p-2 order-tambah-item-detail">
               <div class="col-md-12 text-start">
                 <h4 class="card-title mb-1 text-dark">${item.nama}</h4>
                 <table>

@@ -28,9 +28,10 @@
                   <img src="./assets/images/logos/logo.jpeg" width="100%"/>
                 </a>
                 <form action="#" id="form-login">
+                  <input hidden class="form-control" id="request" name="request" value="login" placeholder="">
                   <div class="mb-3">
                     <label for="username" class="form-label">Username / Email</label>
-                    <input required type="email" class="form-control" id="username" name="username" aria-describedby="emailHelp" placeholder="">
+                    <input required type="email" class="form-control" id="username" name="email" aria-describedby="emailHelp" placeholder="">
                   </div>
                   <div class="mb-4">
                     <label for="password" class="form-label">Password</label>
@@ -61,7 +62,7 @@
   }
 
   $("#form-login").submit(function() {
-    const apiUrl = "./sample_data/login_success.json";
+    const apiUrl = "<?=  $API_URL[$APP_ENV] . $API_ENDPOINT[$APP_ENV]['login'] ?>";
 
     $.ajax({
       type: "POST",
@@ -69,14 +70,16 @@
       data: $("#form-login").serialize(),
       dataType: "JSON",
       success: function (response) {
-        if (response.status == "success") {
-          localStorage.setItem(`user_cred`, JSON.stringify(response.data));
+        if (response.response_result == 1 && response.userData.jabatan == "1faa60c3-9522-40ef-97f1-1c94b8d85c50") {
+          response.userData['token'] =  response.response_token;
+         
+          localStorage.setItem(`user_cred`, JSON.stringify(response.userData));
           window.location.replace("order-data.php");
         } else {
           Swal.fire({
             type: "error",
             title: "Upss...",
-            text: response.message,
+            text: response.response_message,
           });
         }
       }
