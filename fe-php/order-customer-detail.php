@@ -242,9 +242,9 @@ $ruteId = isset($_GET['rute_id']) ? $_GET['rute_id'] : "";
         <div class="modal-body">
           <div class="col-md-12">
             <div class="col-md-12 mb-3 row">
-              <label for="customer-search" class="col-md-12 col-form-label">Cari</label>
+              <label for="item-search" class="col-md-12 col-form-label">Cari</label>
               <div class="col-md-12">
-                <input class="form-control" type="text" id="customer-search" placeholder="Ketikkan kata kunci...">
+                <input class="form-control" type="text" id="item-search" placeholder="Ketikkan kata kunci...">
               </div>
             </div>
           </div>
@@ -458,8 +458,11 @@ $ruteId = isset($_GET['rute_id']) ? $_GET['rute_id'] : "";
 
   let counter = 0;
   $("#tambah-item").click(function() {
+    $('#item-search').val("");
     $("#modal-tambah-item").modal("show");
 
+    reloadListItem();
+    /*
     const apiSearch = `<?= $API_URL[$APP_ENV] . $API_ENDPOINT[$APP_ENV]['supplier_item_list'] ?>`;
     $.ajax({
       type: "GET",
@@ -515,6 +518,7 @@ $ruteId = isset($_GET['rute_id']) ? $_GET['rute_id'] : "";
         $("#list-order-pick").html(html);
       }
     });
+    */
   });
 
   $("#list-order-pick").on('click', '.tambah-item-detail', function() {
@@ -868,6 +872,16 @@ $ruteId = isset($_GET['rute_id']) ? $_GET['rute_id'] : "";
     }
   });
 
+  $('#item-search').on('keyup', function() {
+    if (this.value.length > 1) {
+      const valueStr = this.value;
+
+      setTimeout(function() {
+        reloadListItem(valueStr);
+      }, 750);
+    }
+  });
+
   function reloadItem() {
     let html = "";
     orderItemsAll.forEach(function(item) { 
@@ -925,6 +939,65 @@ $ruteId = isset($_GET['rute_id']) ? $_GET['rute_id'] : "";
     $("#caption-konfirm-satuan-tengah-edit").html(itemDetail.satuan_tengah);
     $("#id-konfirm-item-edit").val(itemId);
     $("#modal-tambah-item-konfirm-edit").modal("show");
+  }
+
+  function reloadListItem(params = "") {
+    const apiSearch = `<?= $API_URL[$APP_ENV] . $API_ENDPOINT[$APP_ENV]['supplier_item_list'] ?>`;
+
+    $.ajax({
+      type: "GET",
+      url: apiSearch + `?divisi=<?= $_GET['divisi_id'] ?>&params=${params}`,
+      dataType: "JSON",
+      beforeSend: function(request) {
+          request.setRequestHeader("Authorization", `Bearer ${salesData.token}`); <?php //salesData can check at auth_check.php ?>
+        },
+      success: function (response) {
+        const parseData = parseResponse(response);
+
+        let html = "";
+        parseData.response_data.forEach(function(item) {
+          html += `
+            <div class="col-md-4 mb-2">
+              <button class="btn btn-rounded btn-outline-info d-flex w-100 d-block text-primary p-2 tambah-item-detail" data-item-id="${item.id ?? item.uid}" data-item-name="${item.nama}" data-satuan-besar="${item.satuan_besar.nama}" data-satuan-tengah="${item.satuan_tengah.nama}" data-satuan-besar-id="${item.satuan_besar.id}" data-satuan-tengah-id="${item.satuan_tengah.id}">
+                 <div class="col-md-12 text-start">
+                    <h4 class="card-title mb-1 text-dark">${item.nama}</h4>
+                    <table>
+                      <tbody>
+                        <tr>
+                          <td>
+                            <span class="fs-2 d-flex align-items-center text-dark">
+                              <i class="ti ti-package text-primary fs-3 me-1"></i>Satuan Besar
+                            </span>
+                          </td>
+                          <td>
+                            <span class="fs-2 d-flex align-items-center text-dark">
+                              : &nbsp; <b> ${item.satuan_besar.nama} </b>
+                            </span>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>
+                            <span class="fs-2 d-flex align-items-center text-dark">
+                              <i class="ti ti-briefcase text-warning fs-3 me-1"></i>Satuan Tengah
+                            </span>
+                          </td>
+                          <td>
+                            <span class="fs-2 d-flex align-items-center text-dark">
+                              : &nbsp; <b> ${item.satuan_tengah.nama} </b>
+                            </span>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>   
+                </button>
+              </div>
+          `;
+        });
+
+        $("#list-order-pick").html(html);
+      }
+    });
   }
 
 </script>
