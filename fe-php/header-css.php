@@ -1,3 +1,9 @@
+  <?php 
+  
+  include './config.php';
+  include './app.php';
+  
+  ?>
 
   <!-- Favicon icon-->
   <link rel="shortcut icon" type="image/png" href="./assets/images/logos/logo-only.jpeg" />

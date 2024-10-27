@@ -1,0 +1,24 @@
+{
+  "token": "",
+  "response_package": {
+    "response_result": 1,
+    "response_value": 5,
+    "response_data":  [
+      {
+        "id": 1,
+        "nama": "Dolpin",
+        "img_url": "-"
+      },
+      {
+        "id": 2,
+        "nama": "Perfetti Van Melle",
+        "img_url": "-"
+      },
+      {
+        "id": 3,
+        "nama": "Dolpin",
+        "img_url": "-"
+      }
+    ]
+  }
+}
