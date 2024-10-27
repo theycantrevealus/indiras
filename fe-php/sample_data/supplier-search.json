@@ -1,0 +1,39 @@
+{
+  "token": "",
+  "response_package": {
+    "response_result": 1,
+    "response_value": 5,
+    "response_data":  [
+      {
+        "id": 1,
+        "text": "Dolpin",
+        "nama": "Dolpin",
+        "img_url": "-"
+      },
+      {
+        "id": 2,
+        "nama": "Perfetti Van Melle",
+        "text": "Perfetti Van Melle",
+        "img_url": "-"
+      },
+      {
+        "id": 3,
+        "nama": "Dolpin",
+        "text": "Dolpin",
+        "img_url": "-"
+      },
+      {
+        "id": 4,
+        "nama": "Kino",
+        "text": "Kino",
+        "img_url": "-"
+      },
+      {
+        "id": 5,
+        "nama": "Livi",
+        "text": "Livi",
+        "img_url": "-"
+      }
+    ]
+  }
+}

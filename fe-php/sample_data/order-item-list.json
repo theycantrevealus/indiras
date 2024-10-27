@@ -1,11 +1,12 @@
 {
+  "status": "success",
   "draw": 1,
-  "recordsTotal": 4,
-  "recordsFiltered": 4,
+  "recordsTotal": 16,
+  "recordsFiltered": 16,
   "data": [
     {
       "id": 1,
-      "name": "Coki Coki, Unilever",
+      "nama": "Coki Coki, Unilever",
       "satuan_besar": "Kardus",
       "satuan_tengah": "Box",
       "jumlah_satuan_besar": 1,
@@ -13,7 +14,119 @@
     },
     {
       "id": 2,
-      "name": "Anggur Merah, Orang Tua",
+      "nama": "Anggur Merah, Orang Tua",
+      "satuan_besar": "Kardus",
+      "satuan_tengah": "Krat",
+      "jumlah_satuan_besar": 3,
+      "jumlah_satuan_tengah": 1
+    },
+    {
+      "id": 3,
+      "nama": "Coki Coki, Unilever",
+      "satuan_besar": "Kardus",
+      "satuan_tengah": "Box",
+      "jumlah_satuan_besar": 1,
+      "jumlah_satuan_tengah": 3
+    },
+    {
+      "id": 4,
+      "nama": "Anggur Merah, Orang Tua",
+      "satuan_besar": "Kardus",
+      "satuan_tengah": "Krat",
+      "jumlah_satuan_besar": 3,
+      "jumlah_satuan_tengah": 1
+    },
+    {
+      "id": 1,
+      "nama": "Coki Coki, Unilever",
+      "satuan_besar": "Kardus",
+      "satuan_tengah": "Box",
+      "jumlah_satuan_besar": 1,
+      "jumlah_satuan_tengah": 3
+    },
+    {
+      "id": 2,
+      "nama": "Anggur Merah, Orang Tua",
+      "satuan_besar": "Kardus",
+      "satuan_tengah": "Krat",
+      "jumlah_satuan_besar": 3,
+      "jumlah_satuan_tengah": 1
+    },
+    {
+      "id": 1,
+      "nama": "Coki Coki, Unilever",
+      "satuan_besar": "Kardus",
+      "satuan_tengah": "Box",
+      "jumlah_satuan_besar": 1,
+      "jumlah_satuan_tengah": 3
+    },
+    {
+      "id": 2,
+      "nama": "Anggur Merah, Orang Tua",
+      "satuan_besar": "Kardus",
+      "satuan_tengah": "Krat",
+      "jumlah_satuan_besar": 3,
+      "jumlah_satuan_tengah": 1
+    },
+    {
+      "id": 1,
+      "nama": "Coki Coki, Unilever",
+      "satuan_besar": "Kardus",
+      "satuan_tengah": "Box",
+      "jumlah_satuan_besar": 1,
+      "jumlah_satuan_tengah": 3
+    },
+    {
+      "id": 2,
+      "nama": "Anggur Merah, Orang Tua",
+      "satuan_besar": "Kardus",
+      "satuan_tengah": "Krat",
+      "jumlah_satuan_besar": 3,
+      "jumlah_satuan_tengah": 1
+    },
+    {
+      "id": 1,
+      "nama": "Coki Coki, Unilever",
+      "satuan_besar": "Kardus",
+      "satuan_tengah": "Box",
+      "jumlah_satuan_besar": 1,
+      "jumlah_satuan_tengah": 3
+    },
+    {
+      "id": 2,
+      "nama": "Anggur Merah, Orang Tua",
+      "satuan_besar": "Kardus",
+      "satuan_tengah": "Krat",
+      "jumlah_satuan_besar": 3,
+      "jumlah_satuan_tengah": 1
+    },
+    {
+      "id": 1,
+      "nama": "Coki Coki, Unilever",
+      "satuan_besar": "Kardus",
+      "satuan_tengah": "Box",
+      "jumlah_satuan_besar": 1,
+      "jumlah_satuan_tengah": 3
+    },
+    {
+      "id": 2,
+      "nama": "Anggur Merah, Orang Tua",
+      "satuan_besar": "Kardus",
+      "satuan_tengah": "Krat",
+      "jumlah_satuan_besar": 3,
+      "jumlah_satuan_tengah": 1
+    },
+    {
+      "id": 1,
+      "nama": "Coki Coki, Unilever",
+      "satuan_besar": "Kardus",
+      "satuan_tengah": "Box",
+      "jumlah_satuan_besar": 1,
+      "jumlah_satuan_tengah": 3
+    },
+    {
+      "id": 2,
+      "nama": "Anggur Merah, Orang Tua",
       "satuan_besar": "Kardus",
       "satuan_tengah": "Krat",
       "jumlah_satuan_besar": 3,

@@ -1,31 +1,37 @@
 {
-  "draw": 1,
-  "recordsTotal": 4,
-  "recordsFiltered": 4,
-  "data": [
-    {
-      "id": 1,
-      "nama": "Sejahtera Sendiri",
-      "rute": "Rute yang mana aja",
-      "alamat": "Jl. 123 No asdasda"
-    },
-    {
-      "id": 2,
-      "nama": "Sejahtera Berdua",
-      "rute": "Rute yang mana aja",
-      "alamat": "Jl. 123 No asdasda"
-    },
-    {
-      "id": 3,
-      "nama": "Sejahtera Bertiga",
-      "rute": "Rute yang mana aja",
-      "alamat": "Jl. 123 No asdasda"
-    },
-    {
-      "id": 4,
-      "nama": "Sejahtera Berempat",
-      "rute": "Rute yang mana aja",
-      "alamat": "Jl. 123 No asdasda"
-    }
-  ]
+  "token": "",
+  "response_package": {
+    "response_result": 1,
+    "response_value": 4,
+    "response_data": [
+      {
+        "id": 1,
+        "nama": "Sejahtera Sendiri",
+        "rute": "Rute yang mana aja",
+        "alamat": "Jl. 123 No asdasda",
+        "kode": "ABC22"
+      },
+      {
+        "id": 2,
+        "nama": "Sejahtera Berdua",
+        "rute": "Rute yang mana aja",
+        "alamat": "Jl. 123 No asdasda",
+        "kode": "ABC12"
+      },
+      {
+        "id": 3,
+        "nama": "Sejahtera Bertiga",
+        "rute": "Rute yang mana aja",
+        "alamat": "Jl. 123 No asdasda",
+        "kode": "ABB12"
+      },
+      {
+        "id": 4,
+        "nama": "Sejahtera Berempat",
+        "rute": "Rute yang mana aja",
+        "alamat": "Jl. 123 No asdasda",
+        "kode": "AAC12"
+      }
+    ]
+  }
 }
