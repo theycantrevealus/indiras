@@ -478,7 +478,7 @@ class Order extends Utility {
                 // Insert Detail
 
                 $detail = self::tambah_order_detail(array(
-                    'parent' => $add['id'],
+                    'parent' => $add['response_unique'],
                     'detail' => $parameter['detail']
                 ));
             }
