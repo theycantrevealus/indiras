@@ -2065,7 +2065,8 @@ class Inventori extends Utility
               $data['response_data'][$key]['satuan_' . $sValue['type']] = array(
                   'id' => $sValue['satuan'],
                   'ratio' => $sValue['nilai'],
-                  'nama' => $sValue['nama_satuan']
+                  'nama' => $sValue['nama_satuan'],
+                  'allow_sell' => $sValue['allow_sell']
               );
           }
           $autonum++;
