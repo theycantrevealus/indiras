@@ -39,7 +39,7 @@ class Lokasi extends Utility {
                     return self::get_toko_detail($parameter);
                     break;
                 case 'search_toko':
-                    return self::search_toko($parameter);
+                    return self::search_toko_2($parameter);
                     break;
                 case 'get_rute':
                     return self::search_rute($parameter);
@@ -333,20 +333,20 @@ class Lokasi extends Utility {
             $paramData = array(
                 'master_toko.nama' => 'ILIKE ' . '\'%' . $params['params'] . '%\'',
                 'AND',
-                'master_rute.deleted_at' => 'IS NULL'
+                'master_toko.deleted_at' => 'IS NULL'
             );
 
             $paramValue = array();
         } else {
             $paramData = array(
-                'master_rute.deleted_at' => 'IS NULL',
+                'master_toko.deleted_at' => 'IS NULL',
             );
 
             $paramValue = array();
         }
 
         $data = self::$query->select('master_toko', array(
-            'id', 'kode', 'nama', 'alamat'
+            'id', 'kode', 'nama as text', 'alamat'
         ))
             ->where($paramData, $paramValue)
             ->join('master_wilayah_provinsi',array('nama as alamat_provinsi'))
@@ -360,6 +360,72 @@ class Lokasi extends Utility {
                 array('master_toko.kelurahan', '=', 'master_wilayah_kelurahan.id'),
             ))
             ->execute();
+
+        foreach ($data['response_data'] as $key => $value) {
+            $rute = self::$query->select('master_rute_detail_toko', array('rute'))
+                ->join('master_rute', array('nama as nama_rute'))
+                ->on(array(
+                    array('master_rute_detail_toko.rute', '=', 'master_rute.id')
+                ))
+                ->where(array(
+                    'master_rute_detail_toko.toko' => '= ?'
+                ), array(
+                    $value['id']
+                ))
+                ->execute();
+            $data['response_data'][$key]['text'] = $value['nama'];
+        }
+        unset($data['response_query']);
+
+        return $data;
+    }
+
+    private function search_toko_2($parameter)
+    {
+        $params = $parameter[count($parameter) - 2];
+
+        if(isset($params['params'])) {
+            $paramData = array(
+                'master_toko.nama' => 'ILIKE ' . '\'%' . $params['params'] . '%\'',
+                'AND',
+                'master_toko.deleted_at' => 'IS NULL'
+            );
+
+            $paramValue = array();
+        } else {
+            $paramData = array(
+                'master_toko.deleted_at' => 'IS NULL',
+            );
+
+            $paramValue = array();
+        }
+
+        $data = self::$query->select('master_rute_detail_toko', array(
+            'toko as id'
+        ))
+            ->where($paramData, $paramValue)
+            ->join('master_rute', array(
+                'nama as nama_rute'
+            ))
+            ->join('master_toko', array(
+                'nama as nama_toko', 'alamat'
+            ))
+            ->join('master_wilayah_provinsi',array('nama as alamat_provinsi'))
+            ->join('master_wilayah_kabupaten',array('nama as alamat_kabupaten'))
+            ->join('master_wilayah_kecamatan',array('nama as alamat_kecamatan'))
+            ->join('master_wilayah_kelurahan',array('nama as alamat_kelurahan'))
+            ->on(array(
+                array('master_rute_detail_toko.rute', '=', 'master_rute.id'),
+                array('master_rute_detail_toko.toko', '=', 'master_toko.id'),
+                array('master_toko.provinsi', '=', 'master_wilayah_provinsi.id'),
+                array('master_toko.kabupaten', '=', 'master_wilayah_kabupaten.id'),
+                array('master_toko.kecamatan', '=', 'master_wilayah_kecamatan.id'),
+                array('master_toko.kelurahan', '=', 'master_wilayah_kelurahan.id'),
+            ))
+            ->execute();
+        foreach ($data['response_data'] as $key => $value) {
+            $data['response_data'][$key]['text'] = $value['nama_toko'] . ' [' . $value['nama_rute'] . ']';
+        }
         unset($data['response_query']);
 
         return $data;
