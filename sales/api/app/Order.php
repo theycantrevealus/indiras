@@ -132,6 +132,26 @@ class Order extends Utility {
         foreach ($data['response_data'] as $key => $value) {
             $data['response_data'][$key]['autonum'] = $autonum;
             $data['response_data'][$key]['tanggal'] = Utility::dateToIndo($value['tanggal']);
+
+            $data['response_data'][$key]['detail'] = self::$query->select('order_detail', array(
+                'type', 'qty', 'item'
+            ))
+                ->join('master_inv', array(
+                    'nama as nama_barang'
+                ))
+                ->join('master_inv_satuan', array(
+                    'nama as nama_satuan'
+                ))
+                ->on(array(
+                    array('order_detail.item', '=', 'master_inv.uid'),
+                    array('order_detail.satuan', '=', 'master_inv_satuan.uid')
+                ))
+                ->where(array(
+                    'order_sales' => '= ?'
+                ), array(
+                    $value['id']
+                ))
+                ->execute()['response_data'];
 //            $data['response_data'][$key]['detail'] = self::$query->select('order_detail', array(
 //                'id',
 //            ));
