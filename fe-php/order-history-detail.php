@@ -71,34 +71,34 @@ $historyId = isset($_GET['history_id']) ? $_GET['history_id'] : "";
               <table id="" class="w-100 table-sm display text-nowrap">
                 <tbody>
                   <tr>
-                    <th width="10%">ID</th>
+                    <th width="10%">Kode</th>
                     <th>:</th>
-                    <th><span id="id_history" class="badge text-bg-success">12345ASASDA</span></th>
+                    <th><span id="id_history" class="badge text-bg-success"> - </span></th>
                   </tr>
                   <tr>
                     <th width="10%">Toko</th>
                     <th>:</th>
-                    <th id="confirm_toko"> UD Test 123</th>
+                    <th id="confirm_toko"> - </th>
                   </tr>
                   <tr>
                     <th>Divisi</th>
                     <th>:</th>
-                    <th id="divisi">Perfetti Van Melle </th>
+                    <th id="divisi"> - </th>
                   </tr>
                   <tr>
                     <th>Rute</th>
                     <th>:</th>
-                    <th id="confirm_rute">Rute 123</th>
+                    <th id="confirm_rute"> - </th>
                   </tr>
                   <tr>
                     <th>Alamat</th>
                     <th>:</th>
-                    <th id="confirm_alamat">Jl. Lima puluh gang 123</th>
+                    <th id="confirm_alamat"> - </th>
                   </tr>
                   <tr>
                     <th>Pembayaran</th>
                     <th>:</th>
-                    <th id="confirm_pembayaran">Tunai</th>
+                    <th id="confirm_pembayaran"> - </th>
                   </tr>
                 </tbody>
               </table>
@@ -108,7 +108,7 @@ $historyId = isset($_GET['history_id']) ? $_GET['history_id'] : "";
           <h5>Daftar Pesanan: </h5>
           <hr />
           <div id="history-item-detail">
-            <div class="col-md-12 mb-2">
+            <!-- <div class="col-md-12 mb-2">
               <button onClick="popUpEdit(this.id)" id="item-id-${item.id}" type="button" class="btn btn-rounded btn-outline-success d-flex w-100 d-block text-primary p-2 order-tambah-item-detail">
                 <div class="col-md-12 text-start">
                   <h4 class="card-title mb-1 text-dark">Coki Coki Coklat</h4>
@@ -142,7 +142,7 @@ $historyId = isset($_GET['history_id']) ? $_GET['history_id'] : "";
                   </table>
                 </div>   
               </button>
-            </div>
+            </div> -->
           </div>
         </div>
 
@@ -159,205 +159,6 @@ $historyId = isset($_GET['history_id']) ? $_GET['history_id'] : "";
     </div>
   </div>
 
-  <div class="modal fade" id="modal-confirm" tabindex="-1" aria-labelledby="bs-example-modal-lg" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-scrollable modal-xl">
-      <div class="modal-content">
-        <div class="modal-header d-flex align-items-center">
-          <h4 class="modal-title" id="myLargeModalLabel">
-            Konfirmasi Pesanan 
-          </h4>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <table id="" class="w-100 table-sm display text-nowrap">
-            <tbody>
-              <tr>
-                <th width="10%">Toko</th>
-                <th>:</th>
-                <th id="confirm_toko"></th>
-              </tr>
-              <tr>
-                <th>Rute</th>
-                <th>:</th>
-                <th id="confirm_rute"></th>
-              </tr>
-              <tr>
-                <th>Alamat</th>
-                <th>:</th>
-                <th id="confirm_alamat"></th>
-              </tr>
-              <tr>
-                <th>Pembayaran</th>
-                <th>:</th>
-                <th id="confirm_pembayaran"></th>
-              </tr>
-            </tbody>
-          </table>
-          <div class="table-responsive mt-3">
-            <table id="order-item-confirm-table" class="table w-100 table-sm table-bordered display text-nowrap">
-              <thead>
-                <!-- start row -->
-                <tr>
-                  <th width="40%">Item</th>
-                  <th>Satuan<br /> Besar</th>
-                  <th>Satuan<br /> Tengah</th>
-                </tr>
-                <!-- end row -->
-              </thead>
-              <tbody>
-              </tbody>
-            </table>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" id="btnSubmitPesanan" class="btn btn-success waves-effect text-start">
-            Pesan!
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="modal fade" id="modal-tambah-item" tabindex="-1" aria-labelledby="bs-example-modal-lg" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-scrollable modal-xl">
-      <div class="modal-content">
-        <div class="modal-header d-flex align-items-center">
-          <h4 class="modal-title" id="myLargeModalLabel">
-            Pilih item 
-          </h4>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <div class="col-md-12">
-            <div class="col-md-12 mb-3 row">
-              <label for="customer-search" class="col-md-12 col-form-label">Cari</label>
-              <div class="col-md-12">
-                <input class="form-control" type="text" id="customer-search" placeholder="Ketikkan kata kunci...">
-              </div>
-            </div>
-          </div>
-          <div class="col-md-12 row" id="list-order-pick">
-         
-          </div>
-          <!-- <table id="order-item-pick-table" class="table w-100 table-sm table-bordered display text-nowrap">
-            <thead>
-              <tr>
-                <th width="40%">Item</th>
-                <th>Satuan<br /> Besar</th>
-                <th>Satuan<br /> Tengah</th>
-              </tr>
-            </thead>
-            <tbody>
-            </tbody>
-          </table> -->
-        </div>
-      </div>
-      <!-- /.modal-content -->
-    </div>
-      <!-- /.modal-dialog -->
-  </div>
-
-  <div class="modal fade" id="modal-tambah-item-konfirm" tabindex="-1" aria-labelledby="bs-example-modal-lg" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-scrollable modal-lg">
-      <div class="modal-content">
-        <div class="modal-header d-flex align-items-center">
-          <h4 class="modal-title" id="myLargeModalLabel">
-            Pilih item 
-          </h4>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <input hidden type="text" id="id-konfirm-item">
-          <div class="col-md-12">
-            <div class="col-md-12 mb-2 row">
-              <label for="konfirm-nama-item" class="col-md-2 col-form-label">Nama Item</label>
-              <div class="col-md-4">
-                <input class="form-control" type="text" id="konfirm-nama-item" disabled>
-              </div>
-            </div>
-          </div>
-          <div class="col-md-12">
-            <div class="col-md-12 mb-2 row">
-              <label for="konfirm-satuan-besar" class="col-md-2 col-form-label">Satuan Besar</label>
-              <div class="col-md-12 input-group">
-                <input class="form-control" type="number" id="konfirm-satuan-besar" aria-describedby="caption-konfirm-satuan-besar">
-                <span class="input-group-text" id="caption-konfirm-satuan-besar"></span>
-              </div>
-            </div>
-          </div>
-          <div class="col-md-12">
-            <div class="col-md-12 mb-3 row">
-              <label for="konfirm-satuan-tengah" class="col-md-2 col-form-label">Satuan Tengah</label>
-              <div class="col-md-12 input-group">
-                <input class="form-control" type="number" id="konfirm-satuan-tengah" aria-describedby="caption-konfirm-satuan-tengah">
-                <span class="input-group-text" id="caption-konfirm-satuan-tengah"></span>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" id="btnSubmitKonfirm" class="btn btn-success waves-effect text-start" data-bs-dismiss="modal">
-            Simpan
-          </button>
-        </div>
-      </div>
-      <!-- /.modal-content -->
-    </div>
-      <!-- /.modal-dialog -->
-  </div>
-
-  <div class="modal fade" id="modal-tambah-item-konfirm-edit" tabindex="-1" aria-labelledby="bs-example-modal-lg" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-scrollable modal-lg">
-      <div class="modal-content">
-        <div class="modal-header d-flex align-items-center">
-          <h4 class="modal-title" id="myLargeModalLabel">
-            Edit item 
-          </h4>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <input hidden type="text" id="id-konfirm-item-edit">
-          <div class="col-md-12">
-            <div class="col-md-12 mb-2 row">
-              <label for="konfirm-nama-item" class="col-md-2 col-form-label">Nama Item</label>
-              <div class="col-md-4">
-                <input class="form-control" type="text" id="konfirm-nama-item-edit" disabled>
-              </div>
-            </div>
-          </div>
-          <div class="col-md-12">
-            <div class="col-md-12 mb-2 row">
-              <label for="konfirm-satuan-besar" class="col-md-2 col-form-label">Satuan Besar</label>
-              <div class="col-md-12 input-group">
-                <input class="form-control" type="number" id="konfirm-satuan-besar-edit" aria-describedby="caption-konfirm-satuan-besar">
-                <span class="input-group-text" id="caption-konfirm-satuan-besar-edit"></span>
-              </div>
-            </div>
-          </div>
-          <div class="col-md-12">
-            <div class="col-md-12 mb-3 row">
-              <label for="konfirm-satuan-tengah" class="col-md-2 col-form-label">Satuan Tengah</label>
-              <div class="col-md-12 input-group">
-                <input class="form-control" type="number" id="konfirm-satuan-tengah-edit" aria-describedby="caption-konfirm-satuan-tengah">
-                <span class="input-group-text" id="caption-konfirm-satuan-tengah-edit"></span>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" id="btnHapusItemOrder" class="btn btn-danger waves-effect text-start">
-            Hapus Item!
-          </button>
-          <button type="button" id="btnSubmitKonfirmUpdate" class="btn btn-success waves-effect text-start">
-            Simpan
-          </button>
-        </div>
-      </div>
-      <!-- /.modal-content -->
-    </div>
-      <!-- /.modal-dialog -->
-  </div>
-
 <div class="dark-transparent sidebartoggler"></div>
 
 <?php include './script.php' ?>  
@@ -371,7 +172,67 @@ $historyId = isset($_GET['history_id']) ? $_GET['history_id'] : "";
 <?php include './auth_check.php' ?>
 
 <script>
+  const paymentMethod = {
+    "1": "C.O.D",
+    "2": "0 - 7 Hari",
+    "3": "7 - 14 Hari"
+  };
 
+  const apiUrl = "<?=  $API_URL[$APP_ENV] . $API_ENDPOINT[$APP_ENV]['order'] ?>";
+
+  $.ajax({
+    type: "GET",
+    url: `${apiUrl}/order_detail/<?= $historyId ?>`,
+    dataType: "JSON",
+    beforeSend: function(request) {
+      request.setRequestHeader("Authorization", `Bearer ${salesData.token}`); <?php //salesData can check at auth_check.php ?>
+    },
+    success: function (response) {
+      let parseData = parseResponse(response);
+
+      $("#id_history").html(parseData.kode);
+      $("#divisi").html(parseData.divisi_nama);
+      $("#confirm_toko").html(parseData.toko_nama);
+      $("#divisi").html(parseData.divisi_nama);
+      $("#confirm_rute").html(parseData.rute_nama); 
+      $("#confirm_alamat").html(parseData.alamat);
+      $("#confirm_pembayaran").html(paymentMethod[`${parseData.metode_bayar}`]);
+
+      let html = "";
+      parseData.detail.forEach(function(item) {
+        html += `<div class="col-md-12 mb-2">
+          <button type="button" class="btn btn-rounded btn-outline-success d-flex w-100 d-block text-primary p-2 order-tambah-item-detail">
+            <div class="col-md-12 text-start">
+              <h4 class="card-title mb-1 text-dark">${item.nama_barang}</h4>
+              <table>
+                <tbody>
+                  <tr>
+                    <td>
+                      <span class="fs-2 d-flex align-items-center text-dark">
+                        <i class="ti ti-package text-primary fs-3 me-1"></i>Satuan ${item.type} 
+                      </span>
+                    </td>
+                    <td>
+                      <span class="fs-2 d-flex align-items-center text-dark">
+                        : &nbsp; <b> ${item.qty} ${item.nama_satuan} </b>
+                      </span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>   
+          </button>
+        </div>`;
+
+      });
+
+      if (parseData.detail.length == 0) {
+        html = "Data pesanan kosong";
+      }
+
+      $("#history-item-detail").html(html);
+    }
+  });
 
 </script>
 
