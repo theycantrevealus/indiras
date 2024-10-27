@@ -291,7 +291,14 @@ class Lokasi extends Utility {
             $autonum++;
         }
 
-        $allData = array();
+//        $allData = array();
+        $allData = array(
+            array(
+                'id' => ' ',
+                'kode' => 'ALL',
+                'nama' => 'All Toko '
+            )
+        );
         $Toko['response_data'] = array_merge($allData, $data['response_data']);
         return $Toko;
     }

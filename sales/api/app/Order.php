@@ -26,8 +26,11 @@ class Order extends Utility {
     public function __GET__($parameter = array()) {
         try {
             switch($parameter[1]) {
-                case 'get_all_order':
-                    return self::get_toko('master_toko');
+//                case 'get_all_order':
+//                    return self::get_toko('master_toko');
+//                    break;
+                case 'order_detail':
+                    return self::order_detail($parameter);
                     break;
                 default:
                     # code...
@@ -48,6 +51,18 @@ class Order extends Utility {
                 return self::get_order($parameter);
                 break;
 
+            case 'order_done':
+                return self::update_status($parameter);
+                break;
+
+            case 'order_cancel':
+                return self::update_status($parameter);
+                break;
+
+            case 'order_pending':
+                return self::update_status($parameter);
+                break;
+
             default:
                 # code...
                 break;
@@ -60,29 +75,227 @@ class Order extends Utility {
 
 
     /*====================== GET FUNCTION =====================*/
+    private function order_detail($parameter)
+    {
+        $Authorization = new Authorization();
+        $UserData = $Authorization->readBearerToken($parameter['access_token']);
+        $params = $parameter[2];
+        $data = self::$query->select('order_sales', array(
+            'id',
+            'kode',
+            'toko',
+            'supplier',
+            'sales',
+            'tanggal',
+            'status',
+            'pegawai_done',
+            'pegawai_pending',
+            'pegawai_cancel',
+            'metode_bayar',
+            'remark',
+            'created_at',
+            'updated_at'
+        ))
+            ->join('master_toko', array(
+                'nama as toko_nama', 'alamat'
+            ))
+            ->join('pegawai', array(
+                'nama as sales_nama'
+            ))
+            ->join('master_inv_supplier', array(
+                'nama as divisi_nama'
+            ))
+            ->join('master_rute', array(
+                'nama as rute_nama'
+            ))
+            ->join('master_wilayah_provinsi',array('nama as alamat_provinsi'))
+            ->join('master_wilayah_kabupaten',array('nama as alamat_kabupaten'))
+            ->join('master_wilayah_kecamatan',array('nama as alamat_kecamatan'))
+            ->join('master_wilayah_kelurahan',array('nama as alamat_kelurahan'))
+            ->on(array(
+                array('order_sales.toko', '=', 'master_toko.id'),
+                array('order_sales.sales', '=', 'pegawai.uid'),
+                array('order_sales.supplier', '=', 'master_inv_supplier.uid'),
+                array('order_sales.rute', '=', 'master_rute.id'),
+                array('master_toko.provinsi', '=', 'master_wilayah_provinsi.id'),
+                array('master_toko.kabupaten', '=', 'master_wilayah_kabupaten.id'),
+                array('master_toko.kecamatan', '=', 'master_wilayah_kecamatan.id'),
+                array('master_toko.kelurahan', '=', 'master_wilayah_kelurahan.id'),
+            ))
+            ->order(array(
+                'order_sales.updated_at' => 'DESC'
+            ))
+            ->where(array(
+                'order_sales.id' => '= ?'
+            ), array(
+                $params
+            ))
+            ->execute();
+        foreach ($data['response_data'] as $key => $value) {
+            if($value['pegawai_cancel'] !== null) {
+                $data['response_data'][$key]['pegawai_cancel'] = self::$query->select('pegawai', array(
+                    'nama'
+                ))
+                    ->where(array(
+                        'pegawai.uid' => '= ?'
+                    ), array(
+                        $value['pegawai_cancel']
+                    ))['response_data'][0];
+            }
+
+            if($value['pegawai_pending'] !== null) {
+                $data['response_data'][$key]['pegawai_pending'] = self::$query->select('pegawai', array(
+                    'nama'
+                ))
+                    ->where(array(
+                        'pegawai.uid' => '= ?'
+                    ), array(
+                        $value['pegawai_pending']
+                    ))['response_data'][0];
+            }
+
+            if($value['pegawai_done'] !== null) {
+                $data['response_data'][$key]['pegawai_done'] = self::$query->select('pegawai', array(
+                    'nama'
+                ))
+                    ->where(array(
+                        'pegawai.uid' => '= ?'
+                    ), array(
+                        $value['pegawai_done']
+                    ))['response_data'][0];
+            }
+
+            $data['response_data'][$key]['tanggal'] = Utility::dateToIndo($value['tanggal']);
+
+            $data['response_data'][$key]['detail'] = self::$query->select('order_detail', array(
+                'type', 'qty', 'item'
+            ))
+                ->join('master_inv', array(
+                    'nama as nama_barang'
+                ))
+                ->join('master_inv_satuan', array(
+                    'nama as nama_satuan'
+                ))
+                ->on(array(
+                    array('order_detail.item', '=', 'master_inv.uid'),
+                    array('order_detail.satuan', '=', 'master_inv_satuan.uid')
+                ))
+                ->where(array(
+                    'order_sales' => '= ?'
+                ), array(
+                    $value['id']
+                ))
+                ->execute()['response_data'];
+        }
+        return $data['response_data'][0];
+    }
+
+    private function update_status($parameter) {
+        $Authorization = new Authorization();
+        $UserData = $Authorization->readBearerToken($parameter['access_token']);
+
+        if($UserData['data']->jabatan === __UIDHQ__ || $UserData['data']->jabatan === __UIDADMIN__) {
+            if(intval($parameter['status']) === 1) {
+                $paramData = array(
+                    'status' => intval($parameter['status']),
+                    'pegawai_pending' => $UserData['data']->uid,
+                );
+            } else if(intval($parameter['status']) === 2) {
+                $paramData = array(
+                    'status' => intval($parameter['status']),
+                    'pegawai_cancel' => $UserData['data']->uid,
+                );
+            } else if(intval($parameter['status']) === 3) {
+                $paramData = array(
+                    'status' => intval($parameter['status']),
+                    'pegawai_done' => $UserData['data']->uid,
+                );
+            }
+
+            $data = self::$query->update('order_sales', $paramData)
+                ->where(array(
+                    'order_sales.id' => '= ?'
+                ), array(
+                    intval($parameter['order'])
+                ))
+                ->execute();
+            return $data;
+        } else {
+            return array('response_data' => array(), 'response_result' => 0, 'response_message' => 'Tidak ada akses');
+        }
+    }
+
     private function get_order($parameter)
     {
         $Authorization = new Authorization();
         $UserData = $Authorization->readBearerToken($parameter['access_token']);
 
-        if (isset($parameter['search']['value']) && !empty($parameter['search']['value'])) {
+        $parameter['divisi'] = trim($parameter['divisi']);
+
+        if((isset($parameter['toko']) && intval($parameter['toko']) > 0) && isset($parameter['divisi']) && !empty($parameter['divisi']) && (isset($parameter['search']['value']) && !empty($parameter['search']['value']))) {
             $paramData = array(
                 'order_sales.deleted_at' => 'IS NULL',
                 'AND',
-                'order_sales.kode' => 'ILIKE ' . '\'%' . $parameter['search']['value'] . '%\''
+                'order_sales.kode' => 'ILIKE ' . '\'%' . $parameter['search']['value'] . '%\'',
+                'AND',
+                'order_sales.toko' => '= ?',
+                'AND',
+                'order_sales.supplier' => '= ?',
+                'AND',
+                'order_sales.created_at' => 'BETWEEN ? AND ?',
             );
 
-            $paramValue = array();
+            $paramValue = array(intval($parameter['toko']), $parameter['divisi'], $parameter['from'], $parameter['to']);
 
-            $filteredString = 'WHERE order_sales.deleted_at IS NULL AND order_sales.kode ILIKE \'%' . $parameter['search']['value'] . '%\'';
+            $filteredString = 'WHERE order_sales.deleted_at IS NULL AND order_sales.kode ILIKE \'%' . $parameter['search']['value'] . '%\' AND order_sales.toko = ' . intval($parameter['toko']) . ' AND order_sales.supplier = \'' . $parameter['divisi'] . '\' AND order_sales.created_at BETWEEN \'' . $parameter['from'] . '\' AND \'' . $parameter['to'] . '\'';
         } else {
-            $paramData = array(
-                'order_sales.deleted_at' => 'IS NULL'
-            );
+            if(isset($parameter['toko']) && intval($parameter['toko']) > 0) {
+                $paramData = array(
+                    'order_sales.deleted_at' => 'IS NULL',
+                    'AND',
+                    'order_sales.toko' => '= ?',
+                    'AND',
+                    'order_sales.created_at' => 'BETWEEN ? AND ?',
+                );
 
-            $paramValue = array();
+                $paramValue = array(intval($parameter['toko']), $parameter['from'], $parameter['to']);
 
-            $filteredString = 'WHERE order_sales.deleted_at IS NULL';
+                $filteredString = 'WHERE order_sales.deleted_at IS NULL AND order_sales.toko = ' . intval($parameter['toko'] . ' AND order_sales.created_at BETWEEN \'' . $parameter['from'] . '\' AND \'' . $parameter['to'] . '\'');
+            } else if(isset($parameter['divisi']) && !empty($parameter['divisi'])) {
+                $paramData = array(
+                    'order_sales.deleted_at' => 'IS NULL',
+                    'AND',
+                    'order_sales.supplier' => '= ?',
+                    'AND',
+                    'order_sales.created_at' => 'BETWEEN ? AND ?',
+                );
+
+                $paramValue = array($parameter['divisi'], $parameter['from'], $parameter['to']);
+
+                $filteredString = 'WHERE order_sales.deleted_at IS NULL AND order_sales.supplier = \'' . $parameter['divisi'] . '\' AND order_sales.created_at BETWEEN \'' . $parameter['from'] . '\' AND \'' . $parameter['to'] . '\'';
+            } else if (isset($parameter['search']['value']) && !empty($parameter['search']['value'])) {
+                $paramData = array(
+                    'order_sales.deleted_at' => 'IS NULL',
+                    'AND',
+                    'order_sales.kode' => 'ILIKE ' . '\'%' . $parameter['search']['value'] . '%\' AND order_sales.created_at BETWEEN \'' . $parameter['from'] . '\' AND \'' . $parameter['to'] . '\'',
+                    'AND',
+                    'order_sales.created_at' => 'BETWEEN ? AND ?',
+                );
+
+                $paramValue = array($parameter['from'], $parameter['to']);
+
+                $filteredString = 'WHERE order_sales.deleted_at IS NULL AND order_sales.kode ILIKE \'%' . $parameter['search']['value'] . '%\' AND order_sales.created_at BETWEEN \'' . $parameter['from'] . '\' AND \'' . $parameter['to'] . '\'';
+            } else {
+                $paramData = array(
+                    'order_sales.deleted_at' => 'IS NULL',
+                    'AND',
+                    'order_sales.created_at' => 'BETWEEN ? AND ?',
+                );
+
+                $paramValue = array($parameter['from'], $parameter['to']);
+
+                $filteredString = 'WHERE order_sales.deleted_at IS NULL AND order_sales.created_at BETWEEN \'' . $parameter['from'] . '\' AND \'' . $parameter['to'] . '\'';
+            }
         }
 
         $data = self::$query->select('order_sales', array(
@@ -152,9 +365,6 @@ class Order extends Utility {
                     $value['id']
                 ))
                 ->execute()['response_data'];
-//            $data['response_data'][$key]['detail'] = self::$query->select('order_detail', array(
-//                'id',
-//            ));
 
             $autonum++;
         }
@@ -185,120 +395,120 @@ class Order extends Utility {
 
     }
 
-    private function get_toko($parameter) {
-        $Authorization = new Authorization();
-        $UserData = $Authorization->readBearerToken($parameter['access_token']);
-
-        if (isset($parameter['search']['value']) && !empty($parameter['search']['value'])) {
-            $paramData = array(
-                'order_sales.deleted_at' => 'IS NULL',
-                'AND',
-                'order_sales.kode' => 'ILIKE ' . '\'%' . $parameter['search']['value'] . '%\''
-            );
-
-            $paramValue = array();
-        } else {
-            $paramData = array(
-                'order_sales.deleted_at' => 'IS NULL'
-            );
-
-            $paramValue = array();
-        }
-
-
-        if ($parameter['length'] < 0) {
-            $data = self::$query->select('order', array(
-                'id',
-                'kode',
-                'toko',
-                'supplier',
-                'sales',
-                'tanggal',
-                'status',
-                'pegawai_done',
-                'pegawai_pending',
-                'pegawai_cancel',
-                'metode_bayar',
-                'remark',
-                'created_at',
-                'updated_at'
-            ))
-                ->join('master_toko', array(
-                    'nama as toko_nama'
-                ))
-                ->join('pegawai', array(
-                    'nama as sales_nama'
-                ))
-                ->on(array(
-                    array('order_sales.toko', '=', 'master_toko.id'),
-                    array('order_sales.sales', '=', 'pegawai.uid')
-                ))
-                ->order(array(
-                    'order_sales.updated_at' => 'DESC'
-                ))
-                ->where($paramData, $paramValue)
-                ->execute();
-        } else {
-            $data = self::$query->select('master_toko', array(
-                'id',
-                'kode',
-                'toko',
-                'supplier',
-                'sales',
-                'tanggal',
-                'status',
-                'pegawai_done',
-                'pegawai_pending',
-                'pegawai_cancel',
-                'metode_bayar',
-                'remark',
-                'created_at',
-                'updated_at'
-            ))
-                ->join('master_toko', array(
-                    'nama as toko_nama'
-                ))
-                ->join('pegawai', array(
-                    'nama as sales_nama'
-                ))
-                ->on(array(
-                    array('order_sales.toko', '=', 'master_toko.id'),
-                    array('order_sales.sales', '=', 'pegawai.uid')
-                ))
-                ->order(array(
-                    'order_sales.updated_at' => 'DESC'
-                ))
-                ->where($paramData, $paramValue)
-                ->offset(intval($parameter['start']))
-                ->limit(intval($parameter['length']))
-                ->execute();
-        }
-
-        $data['response_draw'] = $parameter['draw'];
-        $autonum = intval($parameter['start']) + 1;
-        foreach ($data['response_data'] as $key => $value) {
-            $data['response_data'][$key]['autonum'] = $autonum;
-
-            $data['response_data'][$key]['detail'] = self::$query->select('order_detail', array(
-                'id',
-            ));
-
-            $autonum++;
-        }
-
-        $itemTotal = self::$query->select('master_toko', array(
-            'id'
-        ))
-            ->where($paramData, $paramValue)
-            ->execute();
-
-        $data['recordsTotal'] = count($itemTotal['response_data']);
-        $data['recordsFiltered'] = count($itemTotal['response_data']);
-        $data['length'] = intval($parameter['length']);
-        $data['start'] = intval($parameter['start']);
-
-        return $data;
-    }
+//    private function get_toko($parameter) {
+//        $Authorization = new Authorization();
+//        $UserData = $Authorization->readBearerToken($parameter['access_token']);
+//
+//        if (isset($parameter['search']['value']) && !empty($parameter['search']['value'])) {
+//            $paramData = array(
+//                'order_sales.deleted_at' => 'IS NULL',
+//                'AND',
+//                'order_sales.kode' => 'ILIKE ' . '\'%' . $parameter['search']['value'] . '%\''
+//            );
+//
+//            $paramValue = array();
+//        } else {
+//            $paramData = array(
+//                'order_sales.deleted_at' => 'IS NULL'
+//            );
+//
+//            $paramValue = array();
+//        }
+//
+//
+//        if ($parameter['length'] < 0) {
+//            $data = self::$query->select('order', array(
+//                'id',
+//                'kode',
+//                'toko',
+//                'supplier',
+//                'sales',
+//                'tanggal',
+//                'status',
+//                'pegawai_done',
+//                'pegawai_pending',
+//                'pegawai_cancel',
+//                'metode_bayar',
+//                'remark',
+//                'created_at',
+//                'updated_at'
+//            ))
+//                ->join('master_toko', array(
+//                    'nama as toko_nama'
+//                ))
+//                ->join('pegawai', array(
+//                    'nama as sales_nama'
+//                ))
+//                ->on(array(
+//                    array('order_sales.toko', '=', 'master_toko.id'),
+//                    array('order_sales.sales', '=', 'pegawai.uid')
+//                ))
+//                ->order(array(
+//                    'order_sales.updated_at' => 'DESC'
+//                ))
+//                ->where($paramData, $paramValue)
+//                ->execute();
+//        } else {
+//            $data = self::$query->select('master_toko', array(
+//                'id',
+//                'kode',
+//                'toko',
+//                'supplier',
+//                'sales',
+//                'tanggal',
+//                'status',
+//                'pegawai_done',
+//                'pegawai_pending',
+//                'pegawai_cancel',
+//                'metode_bayar',
+//                'remark',
+//                'created_at',
+//                'updated_at'
+//            ))
+//                ->join('master_toko', array(
+//                    'nama as toko_nama'
+//                ))
+//                ->join('pegawai', array(
+//                    'nama as sales_nama'
+//                ))
+//                ->on(array(
+//                    array('order_sales.toko', '=', 'master_toko.id'),
+//                    array('order_sales.sales', '=', 'pegawai.uid')
+//                ))
+//                ->order(array(
+//                    'order_sales.updated_at' => 'DESC'
+//                ))
+//                ->where($paramData, $paramValue)
+//                ->offset(intval($parameter['start']))
+//                ->limit(intval($parameter['length']))
+//                ->execute();
+//        }
+//
+//        $data['response_draw'] = $parameter['draw'];
+//        $autonum = intval($parameter['start']) + 1;
+//        foreach ($data['response_data'] as $key => $value) {
+//            $data['response_data'][$key]['autonum'] = $autonum;
+//
+//            $data['response_data'][$key]['detail'] = self::$query->select('order_detail', array(
+//                'id',
+//            ));
+//
+//            $autonum++;
+//        }
+//
+//        $itemTotal = self::$query->select('master_toko', array(
+//            'id'
+//        ))
+//            ->where($paramData, $paramValue)
+//            ->execute();
+//
+//        $data['recordsTotal'] = count($itemTotal['response_data']);
+//        $data['recordsFiltered'] = count($itemTotal['response_data']);
+//        $data['length'] = intval($parameter['length']);
+//        $data['start'] = intval($parameter['start']);
+//
+//        return $data;
+//    }
     /*=========================================================*/
 
 

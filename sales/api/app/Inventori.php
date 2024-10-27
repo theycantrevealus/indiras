@@ -32,6 +32,9 @@ class Inventori extends Utility
   {
     try {
       switch ($parameter[1]) {
+          case 'select2_supplier':
+              return self::get_supplier_select($parameter);
+              break;
         case 'lend_detail':
           return self::lend_detail($parameter[2]);
           break;
@@ -2091,6 +2094,39 @@ class Inventori extends Utility
 
 
       return $data;
+  }
+
+  private function get_supplier_select($parameter) {
+      $data = self::$query->select('master_inv_supplier', array(
+              'uid',
+              'kode',
+              'nama'
+          )
+      )
+          ->where(
+              array(
+                  'master_inv_supplier.deleted_at' => 'IS NULL',
+                  'AND',
+                  '(master_inv_supplier.nama' => 'ILIKE ' . '\'%' . $_GET['search'] . '%\'',
+                  'OR',
+                  'master_inv_supplier.kode' => 'ILIKE ' . '\'%' . $_GET['search'] . '%\')'
+              ), array()
+          )
+          ->execute();
+
+      foreach ($data['response_data'] as $key => $value) {
+          $data['response_data'][$key]['autonum'] = $autonum;$autonum++;
+      }
+
+      $allData = array(
+          array(
+              'uid' => ' ',
+              'kode' => 'ALL',
+              'nama' => 'All Divisi'
+          )
+      );
+      $Toko['response_data'] = array_merge($allData, $data['response_data']);
+      return $Toko;
   }
 
   private function get_supplier($parameter) {
