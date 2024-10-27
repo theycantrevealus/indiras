@@ -527,6 +527,8 @@ $ruteId = isset($_GET['rute_id']) ? $_GET['rute_id'] : "";
     const satuanBesarId = $(this).data("satuan-besar-id");
     const satuanTengahId = $(this).data("satuan-tengah-id");
     const satuanTengah = $(this).data("satuan-tengah");
+    const satuanBesarEnable = $(this).data("allow-sell-satuan-besar");
+    const satuanTengahEnable = $(this).data("allow-sell-satuan-tengah");
     const itemId = $(this).data("item-id");
 
     // check item is already exists
@@ -541,12 +543,27 @@ $ruteId = isset($_GET['rute_id']) ? $_GET['rute_id'] : "";
     }
 
     $("#konfirm-satuan-besar").val("");
-    $("#konfirm-satuan-tengah").val("")  
+    $("#konfirm-satuan-tengah").val("");
     $("#konfirm-satuan-besar-id").val(satuanBesarId);
     $("#konfirm-satuan-tengah-id").val(satuanTengahId);
     $("#konfirm-nama-item").val(namaItem);
-    $("#caption-konfirm-satuan-besar").html(satuanBesar);
-    $("#caption-konfirm-satuan-tengah").html(satuanTengah);
+
+    if (satuanBesarEnable == 1) {
+      $("#caption-konfirm-satuan-besar").html(satuanBesar);
+      $("#konfirm-satuan-besar").prop("disabled", false);
+    } else {
+      $("#caption-konfirm-satuan-besar").html("Tidak tersedia");
+      $("#konfirm-satuan-besar").prop("disabled", false);
+    }
+
+    if (satuanTengahEnable == 1) {
+      $("#caption-konfirm-satuan-tengah").html(satuanTengah);
+      $("#konfirm-satuan-tengah").prop("disabled", false);
+    } else {
+      $("#caption-konfirm-satuan-tengah").html("Tidak tersedia");
+      $("#konfirm-satuan-tengah").prop("disabled", true);
+    }
+
     $("#id-konfirm-item").val(itemId);
     $("#modal-tambah-item-konfirm").modal("show");
   });
@@ -873,13 +890,11 @@ $ruteId = isset($_GET['rute_id']) ? $_GET['rute_id'] : "";
   });
 
   $('#item-search').on('keyup', function() {
-    if (this.value.length > 1) {
-      const valueStr = this.value;
+    const valueStr = this.value;
 
-      setTimeout(function() {
-        reloadListItem(valueStr);
-      }, 750);
-    }
+    setTimeout(function() {
+      reloadListItem(valueStr);
+    }, 750); 
   });
 
   function reloadItem() {
@@ -958,7 +973,7 @@ $ruteId = isset($_GET['rute_id']) ? $_GET['rute_id'] : "";
         parseData.response_data.forEach(function(item) {
           html += `
             <div class="col-md-4 mb-2">
-              <button class="btn btn-rounded btn-outline-info d-flex w-100 d-block text-primary p-2 tambah-item-detail" data-item-id="${item.id ?? item.uid}" data-item-name="${item.nama}" data-satuan-besar="${item.satuan_besar.nama}" data-satuan-tengah="${item.satuan_tengah.nama}" data-satuan-besar-id="${item.satuan_besar.id}" data-satuan-tengah-id="${item.satuan_tengah.id}">
+              <button class="btn btn-rounded btn-outline-info d-flex w-100 d-block text-primary p-2 tambah-item-detail" data-item-id="${item.id ?? item.uid}" data-item-name="${item.nama}" data-satuan-besar="${item.satuan_besar.nama}" data-satuan-tengah="${item.satuan_tengah.nama}" data-satuan-besar-id="${item.satuan_besar.id}" data-satuan-tengah-id="${item.satuan_tengah.id}" data-allow-sell-satuan-besar="${item.satuan_besar.allow_sell}" data-allow-sell-satuan-tengah="${item.satuan_tengah.allow_sell}">
                  <div class="col-md-12 text-start">
                     <h4 class="card-title mb-1 text-dark">${item.nama}</h4>
                     <table>
