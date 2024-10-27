@@ -463,7 +463,7 @@ $ruteId = isset($_GET['rute_id']) ? $_GET['rute_id'] : "";
     const apiSearch = `<?= $API_URL[$APP_ENV] . $API_ENDPOINT[$APP_ENV]['supplier_item_list'] ?>`;
     $.ajax({
       type: "GET",
-      url: apiSearch,
+      url: apiSearch + `?divisi=<?= $_GET['divisi_id'] ?>`,
       dataType: "JSON",
       beforeSend: function(request) {
           request.setRequestHeader("Authorization", `Bearer ${salesData.token}`); <?php //salesData can check at auth_check.php ?>
@@ -732,8 +732,6 @@ $ruteId = isset($_GET['rute_id']) ? $_GET['rute_id'] : "";
         detail: orderItemsAll,
         remark: "-",
       };
-
-      console.log(payload);
 
       $.ajax({
         type: "POST",
