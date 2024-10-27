@@ -405,7 +405,7 @@ class Lokasi extends Utility {
         ))
             ->where($paramData, $paramValue)
             ->join('master_rute', array(
-                'nama as nama_rute'
+                'id as id_rute', 'nama as nama_rute'
             ))
             ->join('master_toko', array(
                 'nama as nama_toko', 'alamat'
