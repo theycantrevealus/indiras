@@ -269,7 +269,7 @@
                     const status_color = ['info', 'warning', 'danger', 'success'];
                     const metode_bayar = ['', 'COD', 'Cicil 7 Hari', 'Cicil 14 Hari'];
                     data = response.response_package;
-                    console.log(data);
+
                     $("#order_no").text(data.kode).addClass("text-info");
                     $("#order_tanggal").text("(" + data.tanggal + ")");
                     $("#order_status").text(status[parseInt(data.status)]).addClass(`badge-${status_color[parseInt(data.status)]}`);
@@ -465,6 +465,30 @@
                             console.log(response);
                         }
                     });
+                }
+            });
+        });
+
+        $("#btn-export").click(function () {
+            $.ajax({
+                async: false,
+                url:__HOSTAPI__ + "/Order",
+                type: "POST",
+                data: {
+                    request: "order_export",
+                    toko: selectedToko,
+                    divisi: selectedDivisi,
+                    from: getDateRange("#range_order")[0],
+                    to: getDateRange("#range_order")[1]
+                },
+                beforeSend: function(request) {
+                    request.setRequestHeader("Authorization", "Bearer " + <?php echo json_encode($_SESSION["token"]); ?>);
+                },
+                success: function(response) {
+                    window.location.href = response.response_package
+                },
+                error: function(response) {
+                    console.log(response);
                 }
             });
         });

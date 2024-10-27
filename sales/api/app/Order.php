@@ -63,6 +63,10 @@ class Order extends Utility {
                 return self::update_status($parameter);
                 break;
 
+            case 'order_export':
+                return self::order_export($parameter);
+                break;
+
             default:
                 # code...
                 break;
@@ -184,7 +188,7 @@ class Order extends Utility {
                     array('order_detail.satuan', '=', 'master_inv_satuan.uid')
                 ))
                 ->where(array(
-                    'order_sales' => '= ?'
+                    'order_detail.order_sales' => '= ?'
                 ), array(
                     $value['id']
                 ))
@@ -226,6 +230,128 @@ class Order extends Utility {
         } else {
             return array('response_data' => array(), 'response_result' => 0, 'response_message' => 'Tidak ada akses');
         }
+    }
+
+    private function order_export($parameter)
+    {
+        $Authorization = new Authorization();
+        $UserData = $Authorization->readBearerToken($parameter['access_token']);
+
+        $parameter['divisi'] = trim($parameter['divisi']);
+
+        if((isset($parameter['toko']) && intval($parameter['toko']) > 0) && isset($parameter['divisi']) && !empty($parameter['divisi'])) {
+            $paramData = array(
+                'order_sales.deleted_at' => 'IS NULL',
+                'AND',
+                'order_sales.toko' => '= ?',
+                'AND',
+                'order_sales.supplier' => '= ?',
+                'AND',
+                'order_sales.created_at' => 'BETWEEN ? AND ?',
+            );
+
+            $paramValue = array(intval($parameter['toko']), $parameter['divisi'], $parameter['from'], $parameter['to']);
+
+            $filteredString = 'WHERE order_sales.deleted_at IS NULL AND order_sales.toko = ' . intval($parameter['toko']) . ' AND order_sales.supplier = \'' . $parameter['divisi'] . '\' AND order_sales.created_at BETWEEN \'' . $parameter['from'] . '\' AND \'' . $parameter['to'] . '\'';
+        } else {
+            if(isset($parameter['toko']) && intval($parameter['toko']) > 0) {
+                $paramData = array(
+                    'order_sales.deleted_at' => 'IS NULL',
+                    'AND',
+                    'order_sales.toko' => '= ?',
+                    'AND',
+                    'order_sales.created_at' => 'BETWEEN ? AND ?',
+                );
+
+                $paramValue = array(intval($parameter['toko']), $parameter['from'], $parameter['to']);
+
+                $filteredString = 'WHERE order_sales.deleted_at IS NULL AND order_sales.toko = ' . intval($parameter['toko'] . ' AND order_sales.created_at BETWEEN \'' . $parameter['from'] . '\' AND \'' . $parameter['to'] . '\'');
+            } else if(isset($parameter['divisi']) && !empty($parameter['divisi'])) {
+                $paramData = array(
+                    'order_sales.deleted_at' => 'IS NULL',
+                    'AND',
+                    'order_sales.supplier' => '= ?',
+                    'AND',
+                    'order_sales.created_at' => 'BETWEEN ? AND ?',
+                );
+
+                $paramValue = array($parameter['divisi'], $parameter['from'], $parameter['to']);
+
+                $filteredString = 'WHERE order_sales.deleted_at IS NULL AND order_sales.supplier = \'' . $parameter['divisi'] . '\' AND order_sales.created_at BETWEEN \'' . $parameter['from'] . '\' AND \'' . $parameter['to'] . '\'';
+            } else {
+                $paramData = array(
+                    'order_sales.deleted_at' => 'IS NULL',
+                    'AND',
+                    'order_sales.created_at' => 'BETWEEN ? AND ?',
+                );
+
+                $paramValue = array($parameter['from'], $parameter['to']);
+
+                $filteredString = 'WHERE order_sales.deleted_at IS NULL AND order_sales.created_at BETWEEN \'' . $parameter['from'] . '\' AND \'' . $parameter['to'] . '\'';
+            }
+        }
+
+        $data = [
+            ['TANGGAL', 'DIVISI', 'SALESMAN', 'RUTE', 'KODE TOKO', 'NAMA TOKO', 'ALAMAT', 'KODE BARANG', 'NAMA BARANG', 'SATUAN', 'QTY', 'PEMBAYARAN', 'STATUS', 'ADMIN']
+        ];
+
+        $getData = self::$query->select('order_detail', array(
+            'id', 'qty'
+        ))
+            ->join('order_sales', array(
+                'kode as kode_order',
+                'tanggal as tanggal_order',
+                'metode_bayar',
+                'status'
+            ))
+            ->join('master_inv', array(
+                'kode_barang',
+                'nama as nama_barang'
+            ))
+            ->join('master_inv_satuan', array(
+                'nama as nama_satuan'
+            ))
+            ->join('master_toko', array(
+                'kode as kode_toko',
+                'nama as nama_toko',
+                'alamat'
+            ))
+            ->join('master_rute', array(
+                'nama as nama_rute'
+            ))
+            ->join('master_inv_supplier', array(
+                'kode as kode_divisi',
+                'nama as nama_divisi'
+            ))
+            ->join('pegawai', array(
+                'nama as nama_sales'
+            ))
+            ->on(array(
+                array('order_detail.order_sales', '=', 'order_sales.id'),
+                array('order_detail.item', '=', 'master_inv.uid'),
+                array('order_detail.satuan', '=', 'master_inv_satuan.uid'),
+                array('order_sales.toko', '=', 'master_toko.id'),
+                array('order_sales.rute', '=', 'master_rute.id'),
+                array('order_sales.supplier', '=', 'master_inv_supplier.uid'),
+                array('order_sales.sales', '=', 'pegawai.uid')
+            ))
+            ->where($paramData, $paramValue)
+            ->execute();
+
+        $metodeBayar = ['', 'COD', 'Cicil 7 Hari', 'Cicil 14 Hari'];
+        $statusOrder = ['Baru', 'Pending', 'Cancel', 'Done'];
+
+        foreach ($getData['response_data'] as $key => $value) {
+            array_push($data, [
+                $value['tanggal_order'], $value['nama_divisi'], $value['nama_sales'], $value['nama_rute'], $value['kode_toko'], $value['nama_toko'], $value['alamat'], $value['kode_barang'], $value['nama_barang'], $value['nama_satuan'], floatval($value['qty']), $metodeBayar[intval($value['metode_bayar'])], $statusOrder[intval($value['status'])], ''
+            ]);
+        }
+
+        $xlsx = \Shuchkin\SimpleXLSXGen::fromArray( $data );
+        $targetReport = __HOST__ . 'documents/report/' . $parameter['from'] . '_to_' . $parameter['to'] . '.xlsx';
+        $xlsx->saveAs('../documents/report/' . $parameter['from'] . '_to_' . $parameter['to'] . '.xlsx');
+
+        return $targetReport;
     }
 
     private function get_order($parameter)

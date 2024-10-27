@@ -56,8 +56,11 @@
                             </table>
                         </div>
                         <div class="col-md-2">
-                            <button class="btn btn-info pull-right">
+                            <button class="btn btn-info pull-right" id="btn-cetak" style="margin: 0 5px;">
                                 <i class="fa fa-print"></i> Cetak Laporan
+                            </button>
+                            <button class="btn btn-info pull-right" id="btn-export" style="margin: 0 5px;">
+                                <i class="fa fa-print"></i> Export Laporan
                             </button>
                         </div>
                     </div>
