@@ -15,6 +15,15 @@
 
   <script>
 
+    function getMetodeBayar(strId) {
+      if (strId == '1') {
+        return ""
+      }     
+
+
+      return "";
+    }
+
     function parseResponse(jsonData) {
       return {
         ...jsonData.response_package 
