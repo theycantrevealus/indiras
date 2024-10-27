@@ -2046,7 +2046,7 @@ class Inventori extends Utility
       foreach ($data['response_data'] as $key => $value) {
           $data['response_data'][$key]['autonum'] = $autonum;
           $dataSatuan = self::$query->select('master_inv_satuan_detail', array(
-              'nilai', 'type', 'allow_sell'
+              'nilai', 'type', 'allow_sell', 'satuan'
           ))
               ->join('master_inv_satuan', array('nama as nama_satuan'))
               ->on(array(
@@ -2060,6 +2060,7 @@ class Inventori extends Utility
               ->execute();
           foreach ($dataSatuan['response_data'] as $sKey => $sValue) {
               $data['response_data'][$key]['satuan_' . $sValue['type']] = array(
+                  'id' => $sValue['satuan'],
                   'ratio' => $sValue['nilai'],
                   'nama' => $sValue['nama_satuan']
               );

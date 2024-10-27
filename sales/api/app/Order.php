@@ -44,6 +44,10 @@ class Order extends Utility {
                 return self::tambah_order($parameter);
                 break;
 
+            case 'get_order_backend':
+                return self::get_order($parameter);
+                break;
+
             default:
                 # code...
                 break;
@@ -56,21 +60,126 @@ class Order extends Utility {
 
 
     /*====================== GET FUNCTION =====================*/
+    private function get_order($parameter)
+    {
+        $Authorization = new Authorization();
+        $UserData = $Authorization->readBearerToken($parameter['access_token']);
+
+        if (isset($parameter['search']['value']) && !empty($parameter['search']['value'])) {
+            $paramData = array(
+                'order_sales.deleted_at' => 'IS NULL',
+                'AND',
+                'order_sales.kode' => 'ILIKE ' . '\'%' . $parameter['search']['value'] . '%\''
+            );
+
+            $paramValue = array();
+
+            $filteredString = 'WHERE order_sales.deleted_at IS NULL AND order_sales.kode ILIKE \'%' . $parameter['search']['value'] . '%\'';
+        } else {
+            $paramData = array(
+                'order_sales.deleted_at' => 'IS NULL'
+            );
+
+            $paramValue = array();
+
+            $filteredString = 'WHERE order_sales.deleted_at IS NULL';
+        }
+
+        $data = self::$query->select('order_sales', array(
+            'id',
+            'kode',
+            'toko',
+            'supplier',
+            'sales',
+            'tanggal',
+            'status',
+            'pegawai_done',
+            'pegawai_pending',
+            'pegawai_cancel',
+            'metode_bayar',
+            'remark',
+            'created_at',
+            'updated_at'
+        ))
+            ->join('master_toko', array(
+                'nama as toko_nama'
+            ))
+            ->join('pegawai', array(
+                'nama as sales_nama'
+            ))
+            ->join('master_inv_supplier', array(
+                'nama as divisi_nama'
+            ))
+            ->join('master_rute', array(
+                'nama as rute_nama'
+            ))
+            ->on(array(
+                array('order_sales.toko', '=', 'master_toko.id'),
+                array('order_sales.sales', '=', 'pegawai.uid'),
+                array('order_sales.supplier', '=', 'master_inv_supplier.uid'),
+                array('order_sales.rute', '=', 'master_rute.id')
+            ))
+            ->order(array(
+                'order_sales.updated_at' => 'DESC'
+            ))
+            ->where($paramData, $paramValue)
+            ->offset(intval($parameter['start']) ?? 0)
+            ->limit(intval($parameter['length']) ?? 10)
+            ->execute();
+
+        $data['response_draw'] = $parameter['draw'];
+        $autonum = intval($parameter['start']) + 1;
+        foreach ($data['response_data'] as $key => $value) {
+            $data['response_data'][$key]['autonum'] = $autonum;
+            $data['response_data'][$key]['tanggal'] = Utility::dateToIndo($value['tanggal']);
+//            $data['response_data'][$key]['detail'] = self::$query->select('order_detail', array(
+//                'id',
+//            ));
+
+            $autonum++;
+        }
+
+        $query = self::$pdo->prepare('SELECT COUNT(*) as count FROM order_sales WHERE deleted_at IS NULL');
+        $query->execute(array());
+        if($query->rowCount() > 0) {
+            $read = $query->fetchAll(\PDO::FETCH_ASSOC);
+            $data['recordsTotal'] = $read[0]['count'];
+        } else {
+            $data['recordsTotal'] = 0;
+        }
+
+        $query = self::$pdo->prepare('SELECT COUNT(*) as count FROM order_sales ' . $filteredString);
+        $query->execute(array());
+        if($query->rowCount() > 0) {
+            $read = $query->fetchAll(\PDO::FETCH_ASSOC);
+            $data['recordsFiltered'] = $read[0]['count'];
+        } else {
+            $data['recordsFiltered'] = 0;
+        }
+
+        $data['length'] = intval($parameter['length']);
+        $data['start'] = intval($parameter['start']);
+        unset($data['response_query']);
+
+        return $data;
+
+    }
+
     private function get_toko($parameter) {
         $Authorization = new Authorization();
         $UserData = $Authorization->readBearerToken($parameter['access_token']);
 
         if (isset($parameter['search']['value']) && !empty($parameter['search']['value'])) {
             $paramData = array(
-                'order.deleted_at' => 'IS NULL',
+                'order_sales.deleted_at' => 'IS NULL',
                 'AND',
-                'order.kode' => 'ILIKE ' . '\'%' . $parameter['search']['value'] . '%\''
+                'order_sales.kode' => 'ILIKE ' . '\'%' . $parameter['search']['value'] . '%\''
             );
 
             $paramValue = array();
         } else {
             $paramData = array(
-                'order.deleted_at' => 'IS NULL'
+                'order_sales.deleted_at' => 'IS NULL'
             );
 
             $paramValue = array();
@@ -101,11 +210,11 @@ class Order extends Utility {
                     'nama as sales_nama'
                 ))
                 ->on(array(
-                    array('order.toko', '=', 'master_toko.id'),
-                    array('order.sales', '=', 'pegawai.uid')
+                    array('order_sales.toko', '=', 'master_toko.id'),
+                    array('order_sales.sales', '=', 'pegawai.uid')
                 ))
                 ->order(array(
-                    'order.updated_at' => 'DESC'
+                    'order_sales.updated_at' => 'DESC'
                 ))
                 ->where($paramData, $paramValue)
                 ->execute();
@@ -133,11 +242,11 @@ class Order extends Utility {
                     'nama as sales_nama'
                 ))
                 ->on(array(
-                    array('order.toko', '=', 'master_toko.id'),
-                    array('order.sales', '=', 'pegawai.uid')
+                    array('order_sales.toko', '=', 'master_toko.id'),
+                    array('order_sales.sales', '=', 'pegawai.uid')
                 ))
                 ->order(array(
-                    'order.updated_at' => 'DESC'
+                    'order_sales.updated_at' => 'DESC'
                 ))
                 ->where($paramData, $paramValue)
                 ->offset(intval($parameter['start']))
@@ -177,17 +286,48 @@ class Order extends Utility {
 
     private function tambah_order_detail($parameter) {
         $parent = intval($parameter['parent']);
-
+        $child = array();
+        $forSave = [];
         foreach ($parameter['detail'] as $key => $value) {
-            $newChild = self::$query->insert('order_detail', array(
-                'order' => $parent,
-                'item' => $value['item'],
-                'satuan' => $value['satuan'],
-                'qty' => floatval($value['qty']),
-                'remark' => $value['remark']
-            ))
-                ->execute();
+
+            if(floatval($value['jlh_satuan_besar']) > 0) {
+                array_push($child, self::$query->insert('order_detail', array(
+                    'order_sales' => $parent,
+                    'item' => $value['item'],
+                    'satuan' => $value['id_satuan_besar'],
+                    'qty' => floatval($value['jlh_satuan_besar']),
+                    'type' => 'besar',
+                    'remark' => $value['remark']
+                ))
+                    ->execute());
+            }
+
+            if(floatval($value['jlh_satuan_tengah']) > 0) {
+                array_push($child, self::$query->insert('order_detail', array(
+                    'order_sales' => $parent,
+                    'item' => $value['item'],
+                    'satuan' => $value['id_satuan_tengah'],
+                    'qty' => floatval($value['jlh_satuan_tengah']),
+                    'type' => 'tengah',
+                    'remark' => $value['remark']
+                ))
+                    ->execute());
+            }
+
+            if(floatval($value['jlh_satuan_kecil']) > 0) {
+                array_push($child, self::$query->insert('order_detail', array(
+                    'order_sales' => $parent,
+                    'item' => $value['item'],
+                    'satuan' => $value['id_satuan_kecil'],
+                    'qty' => floatval($value['jlh_satuan_kecil']),
+                    'type' => 'kecil',
+                    'remark' => $value['remark']
+                ))
+                    ->execute());
+            }
         }
+
+        return $child;
     }
 
     private function tambah_order($parameter){
@@ -201,19 +341,20 @@ class Order extends Utility {
          *
          * */
 
-        $checkTodayTransact = self::$query->select('order', array('id'))
+        $checkTodayTransact = self::$query->select('order_sales', array('id'))
             ->where(array(
-                'order.toko' => '= ?',
+                'order_sales.toko' => '= ?',
                 'AND',
-                'order.divisi' => '= ?',
+                'order_sales.supplier' => '= ?',
                 'AND',
-                'order.status' => '= ?'
+                'order_sales.status' => '= ?'
             ), array(
                 $parameter['toko'],
                 $parameter['divisi'],
-                0
+                "0"
             ))
             ->execute();
+
         if(count($checkTodayTransact['response_data']) > 0) {
 
 
@@ -225,10 +366,12 @@ class Order extends Utility {
 
 
             // Insert Detail
-            $detail = self::tambah_order_detail(array(
+            $checkTodayTransact['detail'] = self::tambah_order_detail(array(
                 'parent' => $OLD['id'],
                 'detail' => $parameter['detail']
             ));
+
+            return $checkTodayTransact;
 
 
         } else {
@@ -239,7 +382,7 @@ class Order extends Utility {
 
 
             // Generate order code
-            $latestPO = self::$query->select('order', array(
+            $latestPO = self::$query->select('order_sales', array(
                 'id'
             ))
                 ->where(array(
@@ -270,10 +413,11 @@ class Order extends Utility {
             $set_code = 'ORD/' . date('Y') . '/' . str_pad(date('m'), 2, '0', STR_PAD_LEFT) . '/' . $kode_toko . '/' . $kode_divisi . '/'. str_pad(count($latestPO['response_data']) + 1, 4, '0', STR_PAD_LEFT);
 
             $add = self::$query
-                ->insert('order', array(
+                ->insert('order_sales', array(
                         'kode'=>$set_code,
                         'toko'=>$parameter['toko'],
-                        'supplier'=>$parameter['supplier'],
+                        'rute' => $parameter['rute'],
+                        'supplier'=>$parameter['divisi'],
                         'tanggal' => parent::format_date(),
                         'sales' => $parameter['sales'],
                         'status' => 0,
