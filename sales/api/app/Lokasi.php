@@ -79,6 +79,10 @@ class Lokasi extends Utility {
                 return self::edit_rute($parameter);
                 break;
 
+            case 'proceed_import':
+                return self::proceed_import($parameter);
+                break;
+
             default:
                 # code...
                 break;
@@ -618,37 +622,86 @@ class Lokasi extends Utility {
                 )
                 ->execute()['response_data'];
 
-            $data['response_data'][$key]['toko'] = self::$query->select('master_rute_detail_toko', array(
+            $Toko = self::$query->select('master_rute_detail_toko', array(
                 'toko',
             ))
                 ->join('master_toko', array(
-                    'nama', 'kode', 'alamat'
+                    'nama', 'kode', 'alamat', 'provinsi', 'kabupaten', 'kecamatan', 'kelurahan'
                 ))
-                ->join('master_wilayah_provinsi', array(
-                    'nama as alamat_provinsi_parse'
-                ))
-                ->join('master_wilayah_kabupaten', array(
-                    'nama as alamat_kabupaten_parse'
-                ))
-                ->join('master_wilayah_kecamatan', array(
-                    'nama as alamat_kecamatan_parse'
-                ))
-                ->join('master_wilayah_kelurahan', array(
-                    'nama as alamat_kelurahan_parse'
-                ))
+//                ->join('master_wilayah_provinsi', array(
+//                    'nama as alamat_provinsi_parse'
+//                ))
+//                ->join('master_wilayah_kabupaten', array(
+//                    'nama as alamat_kabupaten_parse'
+//                ))
+//                ->join('master_wilayah_kecamatan', array(
+//                    'nama as alamat_kecamatan_parse'
+//                ))
+//                ->join('master_wilayah_kelurahan', array(
+//                    'nama as alamat_kelurahan_parse'
+//                ))
                 ->on(array(
                     array('master_rute_detail_toko.toko', '=', 'master_toko.id'),
-                    array('master_toko.provinsi', '=', 'master_wilayah_provinsi.id'),
-                    array('master_toko.kabupaten', '=', 'master_wilayah_kabupaten.id'),
-                    array('master_toko.kecamatan', '=', 'master_wilayah_kecamatan.id'),
-                    array('master_toko.kelurahan', '=', 'master_wilayah_kelurahan.id')
+//                    array('master_toko.provinsi', '=', 'master_wilayah_provinsi.id'),
+//                    array('master_toko.kabupaten', '=', 'master_wilayah_kabupaten.id'),
+//                    array('master_toko.kecamatan', '=', 'master_wilayah_kecamatan.id'),
+//                    array('master_toko.kelurahan', '=', 'master_wilayah_kelurahan.id')
                 ))
                 ->where(array(
                     'master_rute_detail_toko.rute' => '= ?'
                 ),
                     array($value['id'])
                 )
-                ->execute()['response_data'];
+                ->execute();
+
+            foreach ($Toko['response_data'] as $TKey => $TValue) {
+                $KelurahanInfo = self::$query->select('master_wilayah_kelurahan', array(
+                    'nama'
+                ))
+                    ->where(array(
+                        'master_wilayah_kelurahan.id' => '= ?'
+                    ), array(
+                        $TValue['kelurahan']
+                    ))
+                    ->execute();
+
+                $Toko['response_data'][$TKey]['alamat_kelurahan_parse'] = (count($KelurahanInfo['response_data']) > 0) ? $KelurahanInfo['response_data'][0]['nama'] : '-';
+
+                $KecamatanInfo = self::$query->select('master_wilayah_kecamatan', array(
+                    'nama'
+                ))
+                    ->where(array(
+                        'master_wilayah_kecamatan.id' => '= ?'
+                    ), array(
+                        $TValue['kecamatan']
+                    ))
+                    ->execute();
+                $Toko['response_data'][$TKey]['alamat_kecamatan_parse'] = (count($KecamatanInfo['response_data']) > 0) ? $KecamatanInfo['response_data'][0]['nama'] : '-';
+
+                $KabupatenInfo = self::$query->select('master_wilayah_kabupaten', array(
+                    'nama'
+                ))
+                    ->where(array(
+                        'master_wilayah_kabupaten.id' => '= ?'
+                    ), array(
+                        $TValue['kabupaten']
+                    ))
+                    ->execute();
+                $Toko['response_data'][$TKey]['alamat_kabupaten_parse'] = (count($KabupatenInfo['response_data']) > 0) ? $KabupatenInfo['response_data'][0]['nama'] : '-';
+
+                $ProvinsiInfo = self::$query->select('master_wilayah_provinsi', array(
+                    'nama'
+                ))
+                    ->where(array(
+                        'master_wilayah_provinsi.id' => '= ?'
+                    ), array(
+                        $TValue['provinsi']
+                    ))
+                    ->execute();
+                $Toko['response_data'][$TKey]['alamat_provinsi_parse'] = (count($ProvinsiInfo['response_data']) > 0) ? $ProvinsiInfo['response_data'][0]['nama'] : '-';
+            }
+
+            $data['response_data'][$key]['toko'] = $Toko['response_data'];
 
             $autonum++;
         }
@@ -761,6 +814,271 @@ class Lokasi extends Utility {
 
             return $bed;
         }
+    }
+
+    function proceed_import($parameter) {
+        $Authorization = new Authorization();
+        $UserData = $Authorization->readBearerToken($parameter['access_token']);
+
+        $duplicate_row = array();
+        $non_active = array();
+        $failed_data = array();
+        $success_proceed = 0;
+        $proceed_data = array();
+        $day = array('Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu');
+        $ruteMeta = array();
+        $ruteReset = array();
+
+        foreach ($parameter['data_import'] as $key => $value) {
+            $toko_kode = $value['kode'];
+            $toko = $value['toko'];
+            $alamat = $value['alamat'];
+            $kelurahan = $value['kelurahan'];
+            $kecamatan = $value['kecamatan'];
+            $kabupaten = $value['kabupaten'];
+            $provinsi = $value['provinsi'];
+            $koordinat = $value['koordinat'];
+            $hari = ucfirst(strtolower($value['hari']));
+            $pekan = $value['pekan'];
+            $sales_email = str_replace(' ','_', trim(strtolower($value['sales']))) . '@cvw.com';
+            $sales = $value['sales'];
+
+            // Prepare Lokasi
+            $kelurahan_check = self::$query->select('master_wilayah_kelurahan', array(
+                'id',
+            ))
+                ->where(array(
+                    'master_wilayah_kelurahan.nama' => '= ?'
+                ), array(
+                    strtoupper($kelurahan)
+                ))
+                ->limit(1)
+                ->execute()['response_data'][0]['id'] ?? 0;
+
+            $kecamatan_check = self::$query->select('master_wilayah_kecamatan', array(
+                'id',
+            ))
+                ->where(array(
+                    'master_wilayah_kecamatan.nama' => '= ?'
+                ), array(
+                    strtoupper($kecamatan)
+                ))
+                ->limit(1)
+                ->execute()['response_data'][0]['id'] ?? 0;
+
+            $kabupaten_check = self::$query->select('master_wilayah_kabupaten', array(
+                'id',
+            ))
+                ->where(array(
+                    'master_wilayah_kabupaten.nama' => '= ?'
+                ), array(
+                    strtoupper($kabupaten)
+                ))
+                ->limit(1)
+                ->execute()['response_data'][0]['id'] ?? 0;
+
+            $provinsi_check = self::$query->select('master_wilayah_provinsi', array(
+                'id',
+            ))
+                ->where(array(
+                    'master_wilayah_provinsi.nama' => '= ?'
+                ), array(
+                    strtoupper($provinsi)
+                ))
+                ->limit(1)
+                ->execute()['response_data'][0]['id'] ?? 0;
+
+            // Prepare Toko
+            $checkToko = self::$query->select('master_toko', array(
+                'id'
+            ))
+                ->where(array(
+                    'master_toko.nama' => '= ?',
+                    'AND',
+                    'master_toko.kode' => '= ?',
+                    'AND',
+                    'master_toko.deleted_at' => 'IS NULL'
+                ), array(
+                    $toko,
+                    $toko_kode
+                ))
+                ->execute();
+            if (count($checkToko['response_data']) > 0) {
+                $targetToko = $checkToko['response_data'][0]['id'];
+                $updateToko = self::$query->update('master_toko', array(
+                    'koordinat' => $koordinat,
+                    'provinsi' => $provinsi_check,
+                    'kabupaten' => $kabupaten_check,
+                    'kecamatan' => $kecamatan_check,
+                    'kelurahan' => $kelurahan_check,
+                    'updated_at' => parent::format_date(),
+                    'deleted_at' => null
+                ))
+                    ->where(array(
+                        'master_toko.id' => '= ?'
+                    ), array(
+                        $targetToko
+                    ))
+                    ->execute();
+            } else {
+                $newToko = self::$query->insert('master_toko', array(
+                    'kode' => $toko_kode,
+                    'nama' => $toko,
+                    'alamat' => $alamat,
+                    'koordinat' => $koordinat,
+                    'provinsi' => $provinsi_check,
+                    'kabupaten' => $kabupaten_check,
+                    'kecamatan' => $kecamatan_check,
+                    'kelurahan' => $kelurahan_check,
+                    'created_at' => parent::format_date(),
+                    'updated_at' => parent::format_date()
+                ))
+                    ->returning('id')
+                    ->execute();
+                $targetToko = $newToko['response_unique'];
+            }
+
+            // Prepare Sales
+            $checkSales = self::$query->select('pegawai', array(
+                'uid'
+            ))
+                ->where(array(
+                    'pegawai.email' => '= ?',
+                    'AND',
+                    'pegawai.deleted_at' => 'IS NULL'
+                ), array(
+                    $sales_email
+                ))
+                ->execute();
+            if (count($checkSales['response_data']) > 0) {
+                $targetSales = $checkSales['response_data'][0]['uid'];
+            } else {
+                $targetSales = parent::gen_uuid();
+                $newSales = self::$query->insert('pegawai', array(
+                    'uid' => $targetSales,
+                    'email' => $sales_email,
+                    'nama' => $sales,
+                    'password' => '',
+                    'jabatan' => __UIDSALES__,
+                    'editable' => true,
+                    'created_at' => parent::format_date(),
+                    'updated_at' => parent::format_date()
+                ))
+                    ->execute();
+            }
+
+            // Prepare Rute
+            $checkRute = self::$query->select('master_rute', array(
+                'id'
+            ))
+                ->where(array(
+                    'master_rute.nama' => '= ?',
+                    'AND',
+                    'master_rute.hari' => '= ?',
+                    'AND',
+                    'master_rute.week_no' => '= ?',
+                ), array(
+                    $hari . ' ' . $pekan,
+                    array_search($hari, $day, true) + 1,
+                    $pekan
+                ))
+                ->execute();
+            if (count($checkRute['response_data']) > 0) {
+                $targetRute = $checkRute['response_data'][0]['id'];
+            } else {
+                $newRute = self::$query->insert('master_rute', array(
+                    'nama' => $hari . ' ' . $pekan,
+                    'hari' => array_search($hari, $day, true) + 1,
+                    'week_no' => $pekan,
+                    'created_by' => $UserData['data']->uid,
+                    'created_at' => parent::format_date(),
+                    'updated_at' => parent::format_date()
+                ))
+                    ->returning('id')
+                    ->execute();
+                $targetRute = $newRute['response_unique'];
+            }
+
+            array_push($ruteMeta, array(
+                'rute' => $targetRute,
+                'sales' => $targetSales,
+                'toko' => $targetToko
+            ));
+
+            if(array_search($targetRute, $ruteReset) === false) {
+                array_push($ruteReset, $targetRute);
+            }
+        }
+
+        foreach ($ruteReset as $key => $value) {
+            $resetSales = self::$query->hard_delete('master_rute_detail_sales')
+                ->where(array(
+                    'master_rute_detail_sales.rute' => '= ?'
+                ), array(
+                    $value
+                ))
+                ->execute();
+
+            $resetToko = self::$query->hard_delete('master_rute_detail_toko')
+                ->where(array(
+                    'master_rute_detail_toko.rute' => '= ?'
+                ), array(
+                    $value
+                ))
+                ->execute();
+        }
+
+        foreach ($ruteMeta as $key => $value) {
+            // Add toko and sales meta
+            $checkSalesRute = self::$query->select('master_rute_detail_sales', array('id'))
+                ->where(array(
+                    'master_rute_detail_sales.rute' => '= ?',
+                    'AND',
+                    'master_rute_detail_sales.sales' => '= ?'
+                ), array(
+                    $value['rute'],
+                    $value['sales']
+                ))
+                ->execute();
+            if (count($checkSalesRute['response_data']) < 1) {
+                $ruteSales = self::$query->insert('master_rute_detail_sales', array(
+                    'sales' => $value['sales'],
+                    'rute' => $value['rute'],
+                ))
+                    ->execute();
+            }
+
+            $checkTokoRute = self::$query->select('master_rute_detail_toko', array(
+                'id'
+            ))
+                ->where(array(
+                    'master_rute_detail_toko.rute' => '= ?',
+                    'AND',
+                    'master_rute_detail_toko.toko' => '= ?'
+                ), array(
+                    $value['rute'],
+                    $value['toko']
+                ))
+                ->execute();
+            if (count($checkTokoRute['response_data']) < 1) {
+                $ruteToko = self::$query->insert('master_rute_detail_toko', array(
+                    'toko' => $value['toko'],
+                    'rute' => $value['rute'],
+                ))
+                    ->execute();
+            }
+        }
+
+        return array(
+            'duplicate_row' => $duplicate_row,
+            'non_active' => $non_active,
+            'rute_reset' => $ruteReset,
+            'rute_meta' => $ruteMeta,
+            'success_proceed' => $success_proceed,
+            'failed_data' => $failed_data,
+            'data' => $parameter['data_import'],
+            'proceed' => $proceed_data
+        );
     }
 
     function edit_rute($parameter) {

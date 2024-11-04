@@ -8,6 +8,7 @@ use PondokCoder\Utility as Utility;
 use PondokCoder\Authorization as Authorization;
 use PondokCoder\Lantai as Lantai;
 use PondokCoder\Ruangan as Ruangan;
+use \Shuchkin;
 
 class Order extends Utility {
     static $pdo;
@@ -343,7 +344,7 @@ class Order extends Utility {
 
         foreach ($getData['response_data'] as $key => $value) {
             array_push($data, [
-                $value['tanggal_order'], $value['nama_divisi'], $value['nama_sales'], $value['nama_rute'], $value['kode_toko'], $value['nama_toko'], $value['alamat'], $value['kode_barang'], $value['nama_barang'], $value['nama_satuan'], floatval($value['qty']), $metodeBayar[intval($value['metode_bayar'])], $statusOrder[intval($value['status'])], ''
+                $value['tanggal_order'], $value['nama_divisi'], $value['nama_sales'], $value['nama_rute'], $value['kode_toko'], $value['nama_toko'], $value['alamat'], $value['kode_barang'], $value['nama_barang'], $value['nama_satuan'], floatval($value['qty']), $metodeBayar[intval($value['metode_bayar'])], $statusOrder[intval($value['status'])], $UserData['data']->nama
             ]);
         }
 
