@@ -49,6 +49,7 @@
 
 
     var __UIDADMIN__ = <?php echo json_encode(__UIDADMIN__); ?>;
+    var __UIDHQ__ = <?php echo json_encode(__UIDHQ__); ?>;
     var __UIDDOKTER__ = <?php echo json_encode(__UIDDOKTER__); ?>;
     var __UIDFISIOTERAPI__ = <?php echo json_encode(__UIDFISIOTERAPI__); ?>;
     var __UIDPETUGASLAB__ = <?php echo json_encode(__UIDPETUGASLAB__); ?>;
