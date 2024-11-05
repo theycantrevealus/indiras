@@ -8,6 +8,7 @@ use PondokCoder\Utility as Utility;
 use PondokCoder\Authorization as Authorization;
 use PondokCoder\Lantai as Lantai;
 use PondokCoder\Ruangan as Ruangan;
+use \Shuchkin;
 
 class Order extends Utility {
     static $pdo;
@@ -31,6 +32,9 @@ class Order extends Utility {
 //                    break;
                 case 'order_detail':
                     return self::order_detail($parameter);
+                    break;
+                case 'sales_history':
+                    return self::sales_history($parameter);
                     break;
                 default:
                     # code...
@@ -79,6 +83,132 @@ class Order extends Utility {
 
 
     /*====================== GET FUNCTION =====================*/
+    private function sales_history($parameter)
+    {
+        $Authorization = new Authorization();
+        $UserData = $Authorization->readBearerToken($parameter['access_token']);
+        $params = $parameter[count($parameter) - 2];
+
+        if(isset($params['toko'])) {
+            $paramKey = array(
+                'order_sales.deleted_at' => 'IS NULL',
+                'AND',
+                'order_sales.toko' => '= ?'
+            );
+            $paramValue = array(intval($params['toko']));
+        } else {
+            $paramKey = array(
+                'order_sales.deleted_at' => 'IS NULL'
+            );
+            $paramValue = array();
+        }
+
+        $DataMeta = array();
+        $DivisiMeta = array();
+
+        $data = self::$query->select('order_detail', array(
+            'qty', 'remark', 'type', 'item'
+        ))
+            ->join('order_sales', array(
+                'kode as kode_order',
+            ))
+            ->join('master_inv', array(
+                'kode_barang',
+                'nama as nama_barang',
+                'supplier as divisi'
+            ))
+            ->join('master_inv_supplier', array(
+                'kode as kode_divisi',
+                'nama as nama_divisi'
+            ))
+            ->on(array(
+                array('order_detail.order_sales', '=', 'order_sales.id'),
+                array('order_detail.item', '=', 'master_inv.uid'),
+                array('master_inv.supplier', '=', 'master_inv_supplier.uid')
+            ))
+            ->where($paramKey, $paramValue)
+            ->execute();
+        foreach ($data['response_data'] as $key => $value) {
+            $data['response_data'][$key]['qty'] = intval($value['qty']);
+            $satuanMeta = array(
+                'nama_satuan_besar' => '',
+                'nama_satuan_tengah' => '',
+                'nama_satuan_kecil' => '',
+                'qty_satuan_besar' => 0,
+                'qty_satuan_tengah' => 0,
+                'qty_satuan_kecil' => 0
+            );
+            $satuan = self::$query->select('master_inv_satuan_detail', array(
+                'nilai', 'type'
+            ))
+                ->join('master_inv_satuan', array(
+                    'nama'
+                ))
+                ->on(array(
+                    array('master_inv_satuan_detail.satuan', '=', 'master_inv_satuan.uid')
+                ))
+                ->where(array(
+                    'master_inv_satuan_detail.item' => '= ?'
+                ), array(
+                    $value['item']
+                ))
+                ->execute();
+            foreach ($satuan['response_data'] as $SKey => $SValue) {
+                $satuanMeta['nama_satuan_' . $SValue['type']] = $SValue['nama'];
+            }
+            $data['response_data'][$key]['satuan'] = $satuanMeta;
+
+
+//            $check = array_search($value['item'], array_column($DataMeta, 'item'));
+//            if($check === false) {
+//                array_push($DataMeta, array(
+//                    'item' =>$value['item'],
+//                    'data' => array()
+//                ));
+//            }
+
+
+            if(!isset($DataMeta[$value['item']])) {
+                $DataMeta[$value['item']] = array();
+            }
+
+            $DataMeta[$value['item']]['kode_barang'] = $value['kode_barang'];
+            $DataMeta[$value['item']]['nama_barang'] = $value['nama_barang'];
+            $DataMeta[$value['item']]['nama_satuan_besar'] = $satuanMeta['nama_satuan_besar'];
+            $DataMeta[$value['item']]['nama_satuan_tengah'] = $satuanMeta['nama_satuan_tengah'];
+            $DataMeta[$value['item']]['nama_satuan_kecil'] = $satuanMeta['nama_satuan_kecil'];
+            $DataMeta[$value['item']]['qty_satuan_' . $value['type']] = floatval($value['qty']);
+            $DataMeta[$value['item']]['divisi'] = $value['nama_divisi'];
+            $DataMeta[$value['item']]['divisi_id'] = $value['divisi'];
+
+
+            if(!isset($DivisiMeta[$value['divisi']])) {
+                $DivisiMeta[$value['divisi']] = array(
+                    'nama' => $value['nama_divisi'],
+                    'data' => array()
+                );
+            }
+        }
+
+        foreach ($DataMeta as $DK => $DV) {
+            array_push($DivisiMeta[$DV['divisi_id']]['data'], $DV);
+        }
+
+        $endResult = array();
+
+        if(intval($params['divisi_group']) > 0) {
+            foreach ($DivisiMeta as $item => $ev) {
+                $endResult[] = $ev;
+            }
+        } else {
+            foreach ($DataMeta as $item => $ev) {
+                $endResult[] = $ev;
+            }
+        }
+
+        return (array) $endResult;
+
+    }
     private function order_detail($parameter)
     {
         $Authorization = new Authorization();
@@ -343,7 +473,7 @@ class Order extends Utility {
 
         foreach ($getData['response_data'] as $key => $value) {
             array_push($data, [
-                $value['tanggal_order'], $value['nama_divisi'], $value['nama_sales'], $value['nama_rute'], $value['kode_toko'], $value['nama_toko'], $value['alamat'], $value['kode_barang'], $value['nama_barang'], $value['nama_satuan'], floatval($value['qty']), $metodeBayar[intval($value['metode_bayar'])], $statusOrder[intval($value['status'])], ''
+                $value['tanggal_order'], $value['nama_divisi'], $value['nama_sales'], $value['nama_rute'], $value['kode_toko'], $value['nama_toko'], $value['alamat'], $value['kode_barang'], $value['nama_barang'], $value['nama_satuan'], floatval($value['qty']), $metodeBayar[intval($value['metode_bayar'])], $statusOrder[intval($value['status'])], $UserData['data']->nama
             ]);
         }
 
