@@ -27,7 +27,7 @@
                         <div class="card">
                             <div class="card-header card-header-large bg-white d-flex align-items-center">
                                 <h5 class="card-header__title flex m-0">Master Rute</h5>
-                                <button class="btn btn-success" id="btn-import">
+                                <button class="btn btn-success" id="btn-import" style="margin: 0 5px">
                                     <i class="fa fa-download"></i> Import
                                 </button>
                                 <button class="btn btn-sm btn-info" id="tambah-rute">
