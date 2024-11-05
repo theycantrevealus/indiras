@@ -89,18 +89,37 @@ class Order extends Utility {
         $UserData = $Authorization->readBearerToken($parameter['access_token']);
         $params = $parameter[count($parameter) - 2];
 
-        if(isset($params['toko'])) {
+        if((isset($params['from']) && isset($params['to'])) && (isset($params['toko']))) {
             $paramKey = array(
                 'order_sales.deleted_at' => 'IS NULL',
                 'AND',
+                '(order_sales.tanggal' => 'BETWEEN ? AND ?)',
+                'AND',
                 'order_sales.toko' => '= ?'
             );
-            $paramValue = array(intval($params['toko']));
+            $paramValue = array($params['from'], $params['to'], intval($params['toko']));
         } else {
-            $paramKey = array(
-                'order_sales.deleted_at' => 'IS NULL'
-            );
-            $paramValue = array();
+            if(isset($params['from']) && isset($params['to'])) {
+                $paramKey = array(
+                    'order_sales.deleted_at' => 'IS NULL',
+                    'AND',
+                    'order_sales.created_at' => 'BETWEEN ? AND ?',
+                );
+                $paramValue = array($params['from'], $params['to']);
+
+            } else if(isset($params['toko'])) {
+                $paramKey = array(
+                    'order_sales.deleted_at' => 'IS NULL',
+                    'AND',
+                    'order_sales.toko' => '= ?'
+                );
+                $paramValue = array(intval($params['toko']));
+            } else {
+                $paramKey = array(
+                    'order_sales.deleted_at' => 'IS NULL'
+                );
+                $paramValue = array();
+            }
         }
 
         $DataMeta = array();
@@ -206,7 +225,8 @@ class Order extends Utility {
             }
         }
 
-        return (array) $endResult;
+//        return (array) $endResult;
+        return $data;
 
     }
     private function order_detail($parameter)
