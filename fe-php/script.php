@@ -17,9 +17,16 @@
 
     function getMetodeBayar(strId) {
       if (strId == '1') {
-        return ""
-      }     
+        return "C.O.D";
+      }
 
+      if (strId == '2') {
+        return "0 - 7 Hari";
+      }
+
+      if (strId == '3') {
+        return "7 - 14 Hari";
+      }
 
       return "";
     }

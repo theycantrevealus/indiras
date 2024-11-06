@@ -27,8 +27,9 @@ $API_ENDPOINT = [
     'supplier_list' => 'sales/api/Inventori/supplier',
     'supplier_search' => 'sales/api/Inventori/search_supplier',
     'supplier_item_list' => 'sales/api/Inventori/item',
-    'history_list' => 'sales/api/History',
+    'history_list' => 'sales/api/Order',
     'order' => 'sales/api/Order',
+    'order_detail_history' => 'sales/api/Order/sales_history',
   ]
 ];
 

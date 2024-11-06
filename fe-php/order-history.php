@@ -90,11 +90,17 @@
               <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-              <div class="col-md-12">
-                <div class="col-md-12 mb-2 row">
-                  <label for="customer-tgl" class="col-md-12 col-form-label">Tanggal</label>
+              <div class="col-md-12 row">
+                <div class="col-md-6 mb-2 row">
+                  <label for="customer-tgl-awal" class="col-md-12 col-form-label">Tanggal Awal</label>
                   <div class="col-md-12">
-                    <input class="form-control" id="customer-tgl" type="date" value="<?= date("Y-m-d") ?>" />
+                    <input class="form-control" id="customer-tgl-awal" type="date" value="<?= date("Y-m-d") ?>" />
+                  </div>
+                </div>
+                <div class="col-md-6 mb-2 row">
+                  <label for="customer-tgl-akhir" class="col-md-12 col-form-label">Tanggal Akhir</label>
+                  <div class="col-md-12">
+                    <input class="form-control" id="customer-tgl-akhir" type="date" value="<?= date("Y-m-d") ?>" />
                   </div>
                 </div>
               </div>
@@ -149,10 +155,9 @@
   });
 
   $("#btnSubmitSearch").click(function() {
-    const rute = $("#customer-rute").val();
     const params = $("#customer-search").val();
 
-    refreshToko(rute, params);
+    refreshHistory(params);
     $("#modal-search").modal("hide");
   });
 
@@ -163,6 +168,9 @@
       url: "<?=  $API_URL[$APP_ENV] . $API_ENDPOINT[$APP_ENV]['toko_search'] ?>",
       dataType: "json",
       delay: 250,
+      beforeSend: function(request) {
+        request.setRequestHeader("Authorization", `Bearer ${salesData.token}`); <?php //salesData can check at auth_check.php ?>
+      },
       data: function (params) {
         return {
           params: params.term, // search term
@@ -186,9 +194,12 @@
     dropdownParent: $("#modal-search"),
     placeholder: "Pilih divisi...", 
     ajax: {
-      url: "<?=  $API_URL[$APP_ENV] . $API_ENDPOINT[$APP_ENV]['supplier_search'] ?>",
+      url: "<?=  $API_URL[$APP_ENV] . $API_ENDPOINT[$APP_ENV]['supplier_list'] ?>",
       dataType: "json",
       delay: 250,
+      beforeSend: function(request) {
+        request.setRequestHeader("Authorization", `Bearer ${salesData.token}`); <?php //salesData can check at auth_check.php ?>
+      },
       data: function (params) {
         return {
           params: params.term, // search term
@@ -197,10 +208,16 @@
       },
       processResults: function (response, params) {
         const result = parseResponse(response);
+        const mapData = result.response_data.map(function(item) {
+          item.text = item.nama;
+          item.id = item.uid;
+          return item;
+        });
+
         params.page = params.page || 1;
 
         return {
-          results: result.response_data,
+          results: mapData,
           pagination: params.page,
         };
       },
@@ -210,30 +227,46 @@
 
   refreshHistory();
 
-  function refreshHistory(tanggal = "", toko = "", divisi = "", params = "") {
+  function refreshHistory(params = "") {
+    const payload = {
+      request : "get_order_backend",
+      search : { value: params },
+      toko : $("#customer-toko").val(),
+      divisi : $("#customer-divisi").val(),
+      from : $("#customer-tgl-awal").val(),
+      to : $("#customer-tgl-akhir").val(),
+      start : 0,
+      length : 50,
+      draw : 1,
+    };
+
     $.ajax({
-      type: "GET",
-      url: apiUrl + `?tanggal=${tanggal}&toko=${toko}&divisi=${divisi}`,
+      type: "POST",
+      url: apiUrl,
+      data: payload,
       dataType: "JSON",
+      beforeSend: function(request) {
+        request.setRequestHeader("Authorization", `Bearer ${salesData.token}`); <?php //salesData can check at auth_check.php ?>
+      },
       success: function (response) {
         let parseData = parseResponse(response);
-
+       
         let html = "";
         parseData.response_data.forEach(function(item) {
           html += `
             <a href="order-history-detail.php?history_id=${item.id}" class="btn btn-rounded btn-outline-warning w-100 d-block text-primary p-2 col-md-12">
               <div class="col-md-12 text-start">
-                <div class="col-md-12 text-end">
+                <div class="col-md-12 text-end mb-1">
                   <span class="fs-1 badge rounded-pill text-bg-warning">${item.tanggal}</span>
                 </div>
-                <h4 class="card-title text-dark ms-2">${item.toko}</h4>
+                <h4 class="card-title text-dark ms-2">${item.toko_nama}</h4>
                 <hr />
                 <div class="ms-2">
-                  <span class="fs-3 d-flex align-items-center text-dark">Divisi : ${item.divisi}
+                  <span class="fs-3 d-flex align-items-center text-dark">Divisi : ${item.divisi_nama}
                   </span>
-                  <span class="fs-2 d-flex align-items-center text-dark">Metode bayar : ${item.metode_bayar} 
+                  <span class="fs-2 d-flex align-items-center text-dark">Metode bayar : ${getMetodeBayar(item.metode_bayar)} 
                   </span>
-                  <span class="fs-2 d-flex align-items-center text-dark">Rute : ${item.rute} 
+                  <span class="fs-2 d-flex align-items-center text-dark">Rute : ${item.rute_nama} 
                   </span>
                 </div>
               </div>   
@@ -242,7 +275,7 @@
            `;
         });
         
-        if (parseData.response_value == 0) {
+        if (parseData.response_result == 0) {
           html = "Data tidak ditemukan";
         }
 

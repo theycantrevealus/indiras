@@ -6,6 +6,7 @@
 $customerId = isset($_GET['customer_id']) ? $_GET['customer_id'] : "";
 $rute = isset($_GET['rute']) ? $_GET['rute'] : "";
 $ruteId = isset($_GET['rute_id']) ? $_GET['rute_id'] : "";
+$divisiName = isset($_GET['divisi_nama']) ? $_GET['divisi_nama'] : ""
 
 ?>
 
@@ -141,6 +142,10 @@ $ruteId = isset($_GET['rute_id']) ? $_GET['rute_id'] : "";
                       <hr />
                       <h6>Daftar Pesanan: </h6>
                       <div class="table-responsive mt-3">
+                        <div id="list-view-history-today">
+
+                        </div>
+                        <hr />
                         <div id="list-item-order">
 
                         </div>
@@ -375,6 +380,18 @@ $ruteId = isset($_GET['rute_id']) ? $_GET['rute_id'] : "";
 
 <?php include './auth_check.php' ?>
 
+<style>
+
+.vertical-buttons {
+  flex-direction: column;
+}
+
+.top-margin {
+  margin-top: .5em;
+}
+
+</style>
+
 <script>
 
   $("#sales-id").val(salesData.nama);
@@ -428,10 +445,11 @@ $ruteId = isset($_GET['rute_id']) ? $_GET['rute_id'] : "";
 
     $('#customer-name').on('select2:select', function (e) {
       const dataRes = e.params.data;
-      console.log(dataRes);
       $("#customer-alamat").val(dataRes.alamat);
       $("#customer-rute").val(dataRes.nama_rute);
       $("#customer-id").val(dataRes.id);
+
+      refreshHistoryToday();
     });
   } else {
     const apiUrl = "<?= $API_URL[$APP_ENV] . $API_ENDPOINT[$APP_ENV]['toko_detail'] ?>";
@@ -448,7 +466,8 @@ $ruteId = isset($_GET['rute_id']) ? $_GET['rute_id'] : "";
 
         $("#customer-name").val(parseData.response_data.nama);
         $("#customer-alamat").val(parseData.response_data.alamat);
-        // $("#customer-rute").val(parseData.response_data.rute);
+
+        refreshHistoryToday();
       }
     });
   }
@@ -712,6 +731,8 @@ $ruteId = isset($_GET['rute_id']) ? $_GET['rute_id'] : "";
       $("#confirm_toko").html($("#customer-name").val());
       $("#confirm_rute").html($("#customer-rute").val());
       $("#confirm_alamat").html($("#customer-alamat").val());
+
+      refreshHistoryToday();
     }
 
     let html = "";
@@ -769,16 +790,20 @@ $ruteId = isset($_GET['rute_id']) ? $_GET['rute_id'] : "";
             $("#modal-confirm").modal("hide");
             
             Swal.fire({
-              title: "Pesanan berhasil dibuat!",
-              text: "Lanjutkan order di toko ini?",
+              title: "Sukses",
+              text: "Pesanan berhasil dibuat!",
               type: "success",
               showCancelButton: true,
               confirmButtonColor: "#3085d6",
               cancelButtonColor: "#d33",
-              confirmButtonText: "Ya, lanjut!",
-              cancelButtonText: "Tidak",
+              confirmButtonText: "Order Divisi Lain?",
+              cancelButtonText: "Checkout Toko!",
               closeClick: false,
-              allowOutsideClick: false
+              allowOutsideClick: false,
+              customClass: {
+                actions: 'vertical-buttons',
+                cancelButton: 'top-margin'
+              }
             }).then((result) => {
               if (!result.value) {
                 window.location.href = 'order-data.php';
@@ -898,36 +923,65 @@ $ruteId = isset($_GET['rute_id']) ? $_GET['rute_id'] : "";
   });
 
   function reloadItem() {
-    let html = "";
+    let html = `<div class="btn btn-outline-warning p-2 mb-3 text-start">
+      <h5><span class="fs-3 mb-1 badge rounded-pill text-bg-info"><?= $divisiName ?></span></h5>`;
+
     orderItemsAll.forEach(function(item) { 
+      // html += `
+      //   <div class="col-md-4 mb-2">
+      //     <button onClick="popUpEdit(this.id)" id="item-id-${item.id ?? item.uid}" type="button" class="btn btn-rounded btn-outline-success d-flex w-100 d-block text-primary p-2 order-tambah-item-detail">
+      //         <div class="col-md-12 text-start">
+      //           <h4 class="card-title mb-1 text-dark">${item.nama}</h4>
+      //           <table>
+      //             <tbody>
+      //               <tr>
+      //                 <td>
+      //                   <span class="fs-2 d-flex align-items-center text-dark">
+      //                     <i class="ti ti-package text-primary fs-3 me-1"></i>Satuan Besar
+      //                   </span>
+      //                 </td>
+      //                 <td>
+      //                   <span class="fs-2 d-flex align-items-center text-dark">
+      //                     : &nbsp; <b> ${item.text_satuan_besar} </b>
+      //                   </span>
+      //                 </td>
+      //               </tr>
+      //               <tr>
+      //                 <td>
+      //                   <span class="fs-2 d-flex align-items-center text-dark">
+      //                     <i class="ti ti-briefcase text-warning fs-3 me-1"></i>Satuan Tengah
+      //                   </span>
+      //                 </td>
+      //                 <td>
+      //                   <span class="fs-2 d-flex align-items-center text-dark">
+      //                     : &nbsp; <b> ${item.text_satuan_tengah} </b>
+      //                   </span>
+      //                 </td>
+      //               </tr>
+      //             </tbody>
+      //           </table>
+      //         </div>   
+      //       </button>
+      //     </div>
+      // `;
+
       html += `
-        <div class="col-md-4 mb-2">
+        <div class="col-md-6 mb-2">
           <button onClick="popUpEdit(this.id)" id="item-id-${item.id ?? item.uid}" type="button" class="btn btn-rounded btn-outline-success d-flex w-100 d-block text-primary p-2 order-tambah-item-detail">
               <div class="col-md-12 text-start">
-                <h4 class="card-title mb-1 text-dark">${item.nama}</h4>
-                <table>
+                <h6 class="mb-1 text-dark">${item.nama}</h6>
+                <table class="w-100">
                   <tbody>
                     <tr>
-                      <td>
-                        <span class="fs-2 d-flex align-items-center text-dark">
-                          <i class="ti ti-package text-primary fs-3 me-1"></i>Satuan Besar
+                      <td class="text-end">
+                        <span class="fs-2 align-items-center text-dark">
+                          <b> ${item.text_satuan_besar} </b>
                         </span>
                       </td>
-                      <td>
-                        <span class="fs-2 d-flex align-items-center text-dark">
-                          : &nbsp; <b> ${item.text_satuan_besar} </b>
-                        </span>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <span class="fs-2 d-flex align-items-center text-dark">
-                          <i class="ti ti-briefcase text-warning fs-3 me-1"></i>Satuan Tengah
-                        </span>
-                      </td>
-                      <td>
-                        <span class="fs-2 d-flex align-items-center text-dark">
-                          : &nbsp; <b> ${item.text_satuan_tengah} </b>
+                      <td> </td>
+                      <td class="text-end">
+                        <span class="fs-2 align-items-center text-dark">
+                          <b> ${item.text_satuan_tengah} </b>
                         </span>
                       </td>
                     </tr>
@@ -938,6 +992,8 @@ $ruteId = isset($_GET['rute_id']) ? $_GET['rute_id'] : "";
           </div>
       `;
     });
+
+    html += `</div>`;
 
     $("#list-item-order").html(html);
   }
@@ -1011,6 +1067,63 @@ $ruteId = isset($_GET['rute_id']) ? $_GET['rute_id'] : "";
         });
 
         $("#list-order-pick").html(html);
+      }
+    });
+  }
+
+  function refreshHistoryToday() {
+    const apiUrlHistory = '<?=  $API_URL[$APP_ENV] . $API_ENDPOINT[$APP_ENV]['order_detail_history'] ?>';
+
+    const payload = {
+      toko : $("#customer-id").val(),
+      divisi_group : 1,
+      from : '<?= date("Y-m-d") ?>',
+      to : '<?= date('Y-m-d', strtotime("+1 day")) ?>',
+    };
+
+    $.ajax({
+      type: "GET",
+      url: apiUrlHistory,
+      data: payload,
+      dataType: "JSON",
+      beforeSend: function(request) {
+        request.setRequestHeader("Authorization", `Bearer ${salesData.token}`); <?php //salesData can check at auth_check.php ?>
+      },
+      success: function (response) { 
+        let html = "";
+        response.response_package.forEach(function(item) {
+          html += `<div class="btn btn-outline-primary p-2 mb-3 text-start">
+            <h5><span class="fs-3 mb-1 badge rounded-pill text-bg-warning">${item.nama}</span></h5>
+          `;
+          item.data.forEach(function(itemData) {
+            html += `<div class="col-md-6 p-2 mb-2 btn btn-outline-secondary">
+                  <div class="col-md-12 text-start">
+                    <h6 class="mb-1 text-dark"><b></b> ${itemData.nama_barang}</h6>
+                    <table class="w-100">
+                      <tbody>
+                        <tr>
+                          <td class="text-end">
+                            <span class="fs-2 align-items-center text-dark">
+                              <b> ${itemData.qty_satuan_besar} ${itemData.nama_satuan_besar} </b>
+                            </span>
+                          </td>
+                          <td> </td>
+                          <td class="text-end">
+                            <span class="fs-2 align-items-center text-dark">
+                              <b> ${itemData.qty_satuan_tengah} ${itemData.nama_satuan_tengah} </b>
+                            </span>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>   
+              </div>`;
+          });
+
+          html += `</div>`;
+        });
+
+        $("#list-view-history-today").html(html);
       }
     });
   }

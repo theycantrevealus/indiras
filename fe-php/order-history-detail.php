@@ -68,12 +68,12 @@ $historyId = isset($_GET['history_id']) ? $_GET['history_id'] : "";
           <div class="card">
             <div class="card-body">
               <!-- <h4 class="card-title mb-3">Data Customer</h4> -->
-              <table id="" class="w-100 table-sm display text-nowrap">
+              <table id="" class="w-100 table-sm display">
                 <tbody>
                   <tr>
                     <th width="10%">Kode</th>
                     <th>:</th>
-                    <th><span id="id_history" class="badge text-bg-success"> - </span></th>
+                    <th style="word-wrap: break-word;"><mark><span id="id_history" class="p-1"> - </span></mark></th>
                   </tr>
                   <tr>
                     <th width="10%">Toko</th>
