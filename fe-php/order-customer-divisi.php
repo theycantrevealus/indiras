@@ -191,7 +191,7 @@ $ruteId = isset($_GET['rute_id']) ? $_GET['rute_id'] : null;
         parseData.response_data.forEach(function(item) {
           html += `
             <div class="col-md-4 mb-3">
-              <a href="order-customer-detail.php?divisi_id=${item.id ?? item.uid}&customer_id=<?= $customerId ?>&rute=<?= $rute ?>&rute_id=<?= $ruteId ?>" class="btn btn-rounded btn-outline-warning d-flex w-100 d-block text-primary p-3">
+              <a href="order-customer-detail.php?divisi_id=${item.id ?? item.uid}&customer_id=<?= $customerId ?>&rute=<?= $rute ?>&rute_id=<?= $ruteId ?>&divisi_nama=${item.nama}" class="btn btn-rounded btn-outline-warning d-flex w-100 d-block text-primary p-3">
                  <div class="col-md-12 text-start">
                     <h4 class="card-title mb-1 text-dark">${item.nama}</h4>
                   </div>   
